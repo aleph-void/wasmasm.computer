@@ -17,17 +17,17 @@ int assemble( char * input, int input_size, char * isa, int endianness, int word
       printf("ISA: %s\n", isa);
       printf("Endianness: %d\n", endianness);
       printf("Wordsize: %d\n", word_size);
-      if (strcmp("ARM", isa) == 0) {
+      if (strcmp("arm", isa) == 0) {
         _isa = KS_ARCH_ARM;
-      } else if (strcmp("ARM64", isa) == 0){
+      } else if (strcmp("aarch64", isa) == 0){
         _isa = KS_ARCH_ARM64;
       }else if (strcmp("x86", isa) == 0) {
         _isa = KS_ARCH_X86;
-      } else if (strcmp("PPC", isa) == 0) {
+      } else if (strcmp("ppc", isa) == 0) {
         _isa = KS_ARCH_PPC;
-      } else if (strcmp("MIPS", isa) == 0) {
+      } else if (strcmp("mips", isa) == 0) {
         _isa = KS_ARCH_MIPS;
-      } else if (strcmp("SPARC", isa) == 0) {
+      } else if (strcmp("sparc", isa) == 0) {
         _isa = KS_ARCH_SPARC;
       } else {
         printf("ERROR: Incorrect ISA!\n");
@@ -35,13 +35,13 @@ int assemble( char * input, int input_size, char * isa, int endianness, int word
       }
     
       if (word_size == 16) {
-        if (strcmp("ARM", isa) == 0) {
+        if (strcmp("arm", isa) == 0) {
           mode = KS_MODE_THUMB;
         } else {
           mode = KS_MODE_16;
         }
       } else if (word_size == 32) {
-        if (strcmp("ARM", isa) == 0){
+        if (strcmp("arm", isa) == 0){
           mode = KS_MODE_ARM;
         } else {
           mode = KS_MODE_32;
@@ -55,7 +55,7 @@ int assemble( char * input, int input_size, char * isa, int endianness, int word
 
       if (endianness == 1 && strcmp("x86", isa) != 0) {
         mode = mode + KS_MODE_BIG_ENDIAN;
-      } else if (endianness == 2 && strcmp("SPARC", isa) == 0){
+      } else if (endianness == 2 && strcmp("sparc", isa) == 0){
         mode = mode + KS_MODE_LITTLE_ENDIAN;
       }
   

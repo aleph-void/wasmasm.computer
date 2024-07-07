@@ -12,18 +12,18 @@
         <div>
           <label for="selectedISA" class="form-label">Instruction Set Architecture</label>
           <select class="form-select" id="selectedISA" v-model="selectedISA">
-            <option selected disabled>Instruction Set Architecture</option>
-            <option value="ARM">ARM</option>
+            <option disabled>Instruction Set Architecture</option>
+            <option value="arm">ARM</option>
             <option value="x86">x86</option>
-            <option value="MIPS">MIPS</option>
-            <option value="PPC">PPC</option>
-            <option value="SPARC">SPARC</option>
+            <option value="mips">MIPS</option>
+            <option value="ppc">PPC</option>
+            <option value="sparc">SPARC</option>
           </select>
         </div>
         <div>
           <label for="selectedWordSize" class="form-label">Word Size</label>
           <select class="form-select" id="selectedWordSize" v-model="selectedWordSize" v-on:change="selectedWordSizeChanged">
-            <option selected disabled>Word Size</option>
+            <option disabled>Word Size</option>
             <option value="16">16-bit</option>
             <option value="32">32-bit</option>
             <option value="64">64-bit</option>
@@ -32,7 +32,7 @@
         <div>
           <label for="selectedEndianness" class="form-label">Endianness</label>
           <select class="form-select" id="selectedEndianness" v-model="selectedEndianness" v-on:change="selectedEndiannessChanged">
-            <option selected disabled>Endianness</option>
+            <option disabled>Endianness</option>
             <option value="big">Big</option>
             <option value="small">Small</option>
           </select>
@@ -47,6 +47,7 @@
         <div>
           <br />
           <button class="btn btn-primary" v-on:click="buttonClicked">Assemble</button>
+          <button class="btn btn-secondary" v-on:click="copyClicked">Copy Link</button>
         </div>
         <div>
           <br />
@@ -64,7 +65,7 @@ export default {
   name: 'MainView',
   data() {
     return {
-      input: "",
+      input:  "",
       output: "",
       selectedISA: "",
       selectedWordSize: "",
@@ -76,13 +77,26 @@ export default {
   },
   async created() {
     this.assembler = await assemblyModule();
-    
+    this.errorMessage = "";
   },
   async mounted() {
+    let queryString = window.location.search;
+    let urlParams = new URLSearchParams(queryString);
+    this.selectedEndianness = urlParams.get('endian');
+    this.selectedISA = urlParams.get('isa');
+    this.selectedWordSize = urlParams.get('word');
+    this.input = urlParams.get('input');
+    console.log(this.input, this.selectedEndianness, this.selectedWordSize, this.selectedISA)
     this.errorMessage = "";
   },
   methods: {
+    copyClicked() {
+      const link = window.location.origin + '/?' + 'isa=' + this.selectedISA + '&word=' + this.selectedWordSize + '&endian=' + this.selectedEndianness + '&input=' + encodeURIComponent(this.input);
+      console.log(link);
+      navigator.clipboard.writeText(link)
+    },
     buttonClicked() {
+      console.log(this.$route.query);
       this.errorMessage = "";
       const inputBuffer = this.assembler._malloc(this.input.length + 1);
       this.assembler.stringToUTF8(this.input, inputBuffer, this.input.length + 1);

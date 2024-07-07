@@ -8,18 +8,16 @@
       </p>
       <p>Written by Nicholas Starke: <a href="https://starkeblog.com/">StarkeBlog.com</a></p>
     </div>
-    <MainView />
+    <main>
+      <RouterView />
+    </main>
   </div>
 </template>
 
 <script>
-import MainView from './components/MainView.vue'
 
 export default {
   name: 'WasmAsm',
-  components: {
-    MainView
-  }
 }
 </script>
 
