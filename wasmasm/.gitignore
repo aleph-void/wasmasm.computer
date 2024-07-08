@@ -2,7 +2,7 @@
 node_modules
 /dist
 src/assets/wasmasm.*
-
+src/assets/wasmdasm.*
 
 # local env files
 .env.local

@@ -7,6 +7,9 @@
         <a href="https://www.keystone-engine.org/">Built with Keystone</a>
       </p>
       <p>Written by Nicholas Starke: <a href="https://starkeblog.com/">StarkeBlog.com</a></p>
+      <p>The input should be valid CPU assembly instructions for your target architecture.  Like <pre>mov eax, edx</pre> for x86 or <pre>mov r0, r1</pre> for arm</p>
+      <p>I built this because I often need to assemble a simple set of instructions for exploit development.</p>
+      <p>This is not built to assemble entire programs.</p>
     </div>
     <main>
       <RouterView />
