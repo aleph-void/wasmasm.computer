@@ -1,0 +1,68 @@
+name: Tests
+
+on:
+  pull_request:
+    branches:
+      - master
+      - main
+
+jobs:
+  # ── C unit tests (wasmasm.c) ────────────────────────────────────────────────
+  c-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository (with submodules)
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install build dependencies
+        run: sudo apt-get update && sudo apt-get install -y cmake build-essential g++
+
+      - name: Get keystone submodule commit hash
+        id: keystone-ref
+        run: echo "hash=$(git -C third_party/keystone rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache keystone build
+        id: cache-keystone
+        uses: actions/cache@v4
+        with:
+          path: third_party/keystone/build
+          key: keystone-${{ runner.os }}-${{ steps.keystone-ref.outputs.hash }}
+
+      - name: Build keystone
+        if: steps.cache-keystone.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p third_party/keystone/build
+          cd third_party/keystone/build
+          cmake .. \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DBUILD_SHARED_LIBS=OFF \
+            -DLLVM_TARGETS_TO_BUILD="all" \
+            -G "Unix Makefiles"
+          make -j$(nproc)
+
+      - name: Run C tests
+        run: make test
+
+  # ── Vue unit tests (Jest + @vue/test-utils) ─────────────────────────────────
+  vue-unit-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: wasmasm/package-lock.json
+
+      - name: Install npm dependencies
+        run: npm ci --prefix wasmasm
+
+      - name: Run Vue unit tests
+        run: npm run test:unit --prefix wasmasm

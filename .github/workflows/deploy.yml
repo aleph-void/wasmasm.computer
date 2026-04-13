@@ -1,0 +1,108 @@
+name: Deploy
+
+on:
+  # Only run the expensive WASM rebuild when C source or keystone actually changes.
+  # Pure Vue / asset changes are handled by the faster pages.yml workflow instead.
+  push:
+    branches:
+      - master
+      - main
+    paths:
+      - 'wasmasm.c'
+      - 'third_party/keystone/**'
+      - 'third_party/capstone/**'
+  # Allow a manual full rebuild + deploy at any time.
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # peaceiris/actions-gh-pages needs write access to push gh-pages branch
+
+    steps:
+      - name: Checkout repository (with submodules)
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install build dependencies
+        run: sudo apt-get update && sudo apt-get install -y cmake build-essential
+
+      # ── Keystone ─────────────────────────────────────────────────────────────
+
+      - name: Get keystone submodule commit hash
+        id: keystone-ref
+        run: echo "hash=$(git -C third_party/keystone rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache keystone build
+        id: cache-keystone
+        uses: actions/cache@v4
+        with:
+          path: third_party/keystone/build
+          key: keystone-${{ runner.os }}-${{ steps.keystone-ref.outputs.hash }}
+
+      - name: Build keystone
+        if: steps.cache-keystone.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p third_party/keystone/build
+          cd third_party/keystone/build
+          cmake .. \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DBUILD_SHARED_LIBS=OFF \
+            -DLLVM_TARGETS_TO_BUILD="all" \
+            -G "Unix Makefiles"
+          make -j$(nproc)
+
+      # ── Emscripten ───────────────────────────────────────────────────────────
+
+      - name: Set up Emscripten
+        uses: mymindstorm/setup-emsdk@v14
+
+      # ── Node / Vue ───────────────────────────────────────────────────────────
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: wasmasm/package-lock.json
+
+      - name: Install npm dependencies
+        run: npm ci --prefix wasmasm
+
+      # ── Build ────────────────────────────────────────────────────────────────
+
+      - name: Build WASM and Vue app
+        run: make build
+
+      # ── E2E tests ────────────────────────────────────────────────────────────
+      # Run against the already-built dist/ directory before deploying.
+      # If any test fails the deploy step is skipped.
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+        working-directory: wasmasm
+
+      - name: Run E2E tests
+        run: npm run test:e2e
+        working-directory: wasmasm
+        env:
+          CI: true
+
+      - name: Upload Playwright report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: wasmasm/playwright-report/
+          retention-days: 7
+
+      # ── Deploy ───────────────────────────────────────────────────────────────
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./wasmasm/dist
+          cname: wasmasm.computer

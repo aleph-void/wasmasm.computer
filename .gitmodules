@@ -1,0 +1,6 @@
+[submodule "third_party/keystone"]
+	path = third_party/keystone
+	url = https://github.com/keystone-engine/keystone
+[submodule "third_party/capstone"]
+	path = third_party/capstone
+	url = https://github.com/capstone-engine/capstone

@@ -1,60 +1,86 @@
 <template>
-  <form onsubmit="return false;">
-    <div class="container">
-      <fieldset>
-        <div>
-          <span style="color: red;"> {{ errorMessage }}</span>
-        </div>
-        <div>
-          <label for="input" class="form-label">Input</label>
-          <textarea id="input" class="form-control" v-model="input"></textarea>
-        </div>
-        <div>
-          <label for="selectedISA" class="form-label">Instruction Set Architecture</label>
-          <select class="form-select" id="selectedISA" v-model="selectedISA">
-            <option disabled>Instruction Set Architecture</option>
-            <option value="arm">ARM</option>
+  <form @submit.prevent>
+    <div class="assembler-shell">
+
+      <div class="assembler-header">
+        <p class="section-label">// Assembler</p>
+        <h1 class="assembler-title">Browser-based CPU Assembler</h1>
+        <p class="assembler-desc">
+          Paste assembly instructions below, choose your target architecture, and click Assemble.
+          Supports x86, ARM, AArch64, MIPS, PPC, and SPARC — powered by
+          <a href="https://www.keystone-engine.org/" target="_blank" rel="noopener">Keystone Engine</a>
+          compiled to WebAssembly.
+        </p>
+      </div>
+
+      <div class="config-row">
+        <div class="field-group">
+          <label for="selectedISA" class="field-label">Architecture</label>
+          <select id="selectedISA" class="asm-select" v-model="selectedISA">
+            <option value="" disabled>Select ISA</option>
             <option value="x86">x86</option>
+            <option value="arm">ARM</option>
+            <option value="aarch64">AArch64</option>
             <option value="mips">MIPS</option>
             <option value="ppc">PPC</option>
             <option value="sparc">SPARC</option>
           </select>
         </div>
-        <div>
-          <label for="selectedWordSize" class="form-label">Word Size</label>
-          <select class="form-select" id="selectedWordSize" v-model="selectedWordSize" v-on:change="selectedWordSizeChanged">
-            <option disabled>Word Size</option>
+
+        <div class="field-group">
+          <label for="selectedWordSize" class="field-label">Word Size</label>
+          <select id="selectedWordSize" class="asm-select" v-model="selectedWordSize" @change="selectedWordSizeChanged">
+            <option value="" disabled>Select size</option>
             <option value="16">16-bit</option>
             <option value="32">32-bit</option>
             <option value="64">64-bit</option>
           </select>
         </div>
-        <div>
-          <label for="selectedEndianness" class="form-label">Endianness</label>
-          <select class="form-select" id="selectedEndianness" v-model="selectedEndianness" v-on:change="selectedEndiannessChanged">
-            <option disabled>Endianness</option>
-            <option value="big">Big</option>
-            <option value="small">Small</option>
+
+        <div class="field-group">
+          <label for="selectedEndianness" class="field-label">Endianness</label>
+          <select id="selectedEndianness" class="asm-select" v-model="selectedEndianness" @change="selectedEndiannessChanged">
+            <option value="" disabled>Select endian</option>
+            <option value="small">Little-endian</option>
+            <option value="big">Big-endian</option>
           </select>
         </div>
-        <!-- <div>
-          <label for="selectedExtra">Extras</label>
-          <select v-model="selectedExtra" v-on:change="selectedExtraChanged">
-            <option selected disabled>Extras</option>
-            <option value="ARMv8">ARMv8</option>
-          </select>
-        </div> -->
-        <div>
-          <br />
-          <button class="btn btn-primary" v-on:click="buttonClicked">Assemble</button>
-          <button class="btn btn-secondary" v-on:click="copyClicked">Copy Link</button>
+      </div>
+
+      <div class="pane-row">
+        <div class="pane">
+          <p class="section-label">// Input</p>
+          <textarea
+            id="input"
+            class="asm-textarea"
+            v-model="input"
+            placeholder="mov eax, edx"
+            spellcheck="false"
+          ></textarea>
         </div>
-        <div>
-          <br />
-          <label for="output" class="form-label">Output</label>
-          <textarea class="form-select" disabled id="output" v-model="output"></textarea>
+
+        <div class="pane">
+          <p class="section-label">// Output</p>
+          <textarea
+            id="output"
+            class="asm-textarea asm-textarea--output"
+            :value="output"
+            readonly
+            placeholder="assembled bytes appear here"
+            spellcheck="false"
+          ></textarea>
         </div>
-      </fieldset>
+      </div>
+
+      <div v-if="errorMessage" class="error-banner" role="alert">
+        {{ errorMessage }}
+      </div>
+
+      <div class="action-row">
+        <button class="btn-primary" @click="buttonClicked">Assemble</button>
+        <button class="btn-ghost" @click="copyClicked">Copy Link</button>
+      </div>
+
     </div>
   </form>
 </template>
@@ -86,14 +112,14 @@ export default {
     this.selectedISA = urlParams.get('isa');
     this.selectedWordSize = urlParams.get('word');
     this.input = urlParams.get('input');
-    console.log(this.input, this.selectedEndianness, this.selectedWordSize, this.selectedISA)
     this.errorMessage = "";
   },
   methods: {
+    selectedWordSizeChanged() {},
+    selectedEndiannessChanged() {},
     copyClicked() {
       const link = window.location.origin + '/?' + 'isa=' + this.selectedISA + '&word=' + this.selectedWordSize + '&endian=' + this.selectedEndianness + '&input=' + encodeURIComponent(this.input);
-      console.log(link);
-      navigator.clipboard.writeText(link)
+      navigator.clipboard.writeText(link);
     },
     buttonClicked() {
       console.log(this.$route.query);
@@ -103,24 +129,223 @@ export default {
       const isaBuffer = this.assembler._malloc(this.selectedISA.length + 1);
       this.assembler.stringToUTF8(this.selectedISA, isaBuffer, this.selectedISA.length + 1);
       const outputBuffer = this.assembler._malloc((this.input.length * 4) + 1);
-      console.log(outputBuffer);      
       this.assembler._assemble(inputBuffer, this.input.length, isaBuffer, this.selectedEndianness === 'big' ? 1 : 2, parseInt(this.selectedWordSize), outputBuffer);
       this.assembler._free(inputBuffer);
       this.assembler._free(isaBuffer);
       const out = this.assembler.UTF8ToString(outputBuffer);
-      if (out){
+      if (out) {
         this.output = out;
       } else {
-        this.errorMessage = "Problem with disassembly. Check settings and try again";
+        this.errorMessage = "Assembly failed. Check your input and settings and try again.";
       }
       this.assembler._free(outputBuffer);
       return false;
     }
   }
-}   
+}
 </script>
 
-<!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
+.assembler-shell {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+}
 
+/* Header */
+.assembler-header {
+  max-width: 640px;
+}
+
+.section-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--accent-light);
+  margin-bottom: 0.5rem;
+}
+
+.assembler-title {
+  font-size: clamp(1.4rem, 3vw, 1.9rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-bottom: 0.65rem;
+}
+
+.assembler-desc {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.7;
+}
+
+.assembler-desc a {
+  color: var(--accent-light);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.assembler-desc a:hover {
+  color: #a78bfa;
+}
+
+/* Config row */
+.config-row {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  min-width: 160px;
+}
+
+.field-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+
+.asm-select {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-primary);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.875rem;
+  padding: 0.5rem 0.75rem;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2371717a' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.65rem center;
+  padding-right: 2rem;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.asm-select:focus {
+  outline: none;
+  border-color: var(--accent-light);
+}
+
+/* Panes */
+.pane-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+}
+
+.pane {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.asm-textarea {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-primary);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  padding: 0.875rem 1rem;
+  resize: vertical;
+  min-height: 220px;
+  transition: border-color 0.2s;
+}
+
+.asm-textarea:focus {
+  outline: none;
+  border-color: var(--accent-light);
+}
+
+.asm-textarea--output {
+  color: var(--accent-light);
+  cursor: default;
+}
+
+.asm-textarea::placeholder {
+  color: var(--text-muted);
+}
+
+/* Error */
+.error-banner {
+  background: rgba(220, 38, 38, 0.1);
+  border: 1px solid rgba(220, 38, 38, 0.3);
+  border-radius: 6px;
+  color: #f87171;
+  font-size: 0.875rem;
+  padding: 0.75rem 1rem;
+}
+
+/* Actions */
+.action-row {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 500;
+  padding: 0.625rem 1.5rem;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s;
+}
+
+.btn-primary:hover {
+  background: var(--accent-light);
+  transform: translateY(-1px);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 500;
+  padding: 0.625rem 1.5rem;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s;
+}
+
+.btn-ghost:hover {
+  border-color: var(--accent-light);
+  color: var(--text-primary);
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .pane-row {
+    grid-template-columns: 1fr;
+  }
+
+  .config-row {
+    flex-direction: column;
+  }
+
+  .field-group {
+    min-width: unset;
+  }
+}
 </style>

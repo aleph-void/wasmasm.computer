@@ -34,19 +34,32 @@ int assemble( char * input, int input_size, char * isa, int endianness, int word
         return -1;
       }
     
-      if (word_size == 16) {
+      // AArch64 is always 64-bit; KS_MODE_64 is an x86-only flag and must
+      // never be passed to KS_ARCH_ARM64 — ks_open() returns KS_ERR_MODE.
+      if (strcmp("aarch64", isa) == 0) {
+        if (word_size != 64) {
+          printf("ERROR: AArch64 only supports 64-bit word size\n");
+          return -1;
+        }
+        mode = KS_MODE_LITTLE_ENDIAN; // endianness flag applied below
+      } else if (word_size == 16) {
         if (strcmp("arm", isa) == 0) {
           mode = KS_MODE_THUMB;
         } else {
           mode = KS_MODE_16;
         }
       } else if (word_size == 32) {
-        if (strcmp("arm", isa) == 0){
+        if (strcmp("arm", isa) == 0) {
           mode = KS_MODE_ARM;
         } else {
           mode = KS_MODE_32;
         }
       } else if (word_size == 64) {
+        // 64-bit ARM requires KS_ARCH_ARM64, not KS_ARCH_ARM
+        if (strcmp("arm", isa) == 0) {
+          printf("ERROR: 64-bit ARM requires isa 'aarch64', not 'arm'\n");
+          return -1;
+        }
         mode = KS_MODE_64;
       } else {
         printf("ERROR: Incorrect Word Size!\n");
@@ -68,21 +81,24 @@ int assemble( char * input, int input_size, char * isa, int endianness, int word
       if (ks_asm(ks, input, 0, &encode, &size, &count) != KS_ERR_OK) {
           printf("ERROR: ks_asm() failed & count = %lu, error = %u\n",
 		         count, ks_errno(ks));
-      } else {
-          size_t i;
-          int len = 0;
-          for (i = 0; i < size; i++) {
-              sprintf(output + len, "%02x ", encode[i]);
-              len += 3;
-          }
+          ks_free(encode);
+          ks_close(ks);
+          return -1;
       }
-  
+
+      size_t i;
+      int len = 0;
+      for (i = 0; i < size; i++) {
+          sprintf(output + len, "%02x ", encode[i]);
+          len += 3;
+      }
+
       // NOTE: free encode after usage to avoid leaking memory
       ks_free(encode);
-  
+
       // close Keystone instance when done
       ks_close(ks);
-  
+
       return 0;
 }
 /*
@@ -94,15 +110,17 @@ int disassemble( const unsigned char * input, int input_size, char * isa, int en
       int mode = 0;
       int _isa = 0;
 
-      if (strcmp("ARM", isa)) {
+      if (strcmp("arm", isa) == 0) {
         _isa = CS_ARCH_ARM;
-      } else if (strcmp("x86", isa)) {
+      } else if (strcmp("aarch64", isa) == 0) {
+        _isa = CS_ARCH_ARM64;
+      } else if (strcmp("x86", isa) == 0) {
         _isa = CS_ARCH_X86;
-      } else if (strcmp("PPC", isa)) {
+      } else if (strcmp("ppc", isa) == 0) {
         _isa = CS_ARCH_PPC;
-      } else if (strcmp("MIPS", isa)) {
+      } else if (strcmp("mips", isa) == 0) {
         _isa = CS_ARCH_MIPS;
-      } else if (strcmp("SPARC", isa)) {
+      } else if (strcmp("sparc", isa) == 0) {
         _isa = CS_ARCH_SPARC;
       } else {
         printf("ERROR: Incorrect ISA!\n");

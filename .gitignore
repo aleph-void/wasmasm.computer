@@ -1,3 +1,8 @@
 .vscode
-keystone
-capstone
+# Ignore the old root-level vendor copies (replaced by third_party/ submodules)
+/keystone
+/capstone
+# Build output
+dist/
+# Native test binary
+tests/run_tests
