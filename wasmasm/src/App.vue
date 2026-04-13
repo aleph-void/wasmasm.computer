@@ -18,7 +18,7 @@
     </main>
 
     <footer class="site-footer">
-      <p>Built with <a href="https://www.keystone-engine.org/" target="_blank" rel="noopener">Keystone Engine</a> compiled to WebAssembly &mdash; by <a href="https://starkeblog.com/" target="_blank" rel="noopener">Nicholas Starke</a></p>
+      <p>Built with <a href="https://www.keystone-engine.org/" target="_blank" rel="noopener">Keystone Engine</a> compiled to WebAssembly &mdash; created by <a href="https://alephvoid.com/" target="_blank" rel="noopener">Aleph Void LLC</a></p>
     </footer>
   </div>
 </template>
