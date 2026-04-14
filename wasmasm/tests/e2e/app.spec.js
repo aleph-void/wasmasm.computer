@@ -551,8 +551,8 @@ test.describe('i18n / language selector', () => {
 
   test('switching to French updates mode toggle buttons', async ({ page }) => {
     await page.selectOption('select.locale-select', 'fr')
-    await expect(page.locator('button.mode-btn', { hasText: 'Assembler' })).toBeVisible()
-    await expect(page.locator('button.mode-btn', { hasText: 'Désassembler' })).toBeVisible()
+    await expect(page.locator('button.mode-btn', { hasText: /^Assembler$/ })).toBeVisible()
+    await expect(page.locator('button.mode-btn', { hasText: /^Désassembler$/ })).toBeVisible()
   })
 
   test('switching to Spanish updates the action button to "Ensamblar"', async ({ page }) => {
@@ -562,8 +562,8 @@ test.describe('i18n / language selector', () => {
 
   test('switching to Spanish updates mode toggle labels', async ({ page }) => {
     await page.selectOption('select.locale-select', 'es')
-    await expect(page.locator('button.mode-btn', { hasText: 'Ensamblar' })).toBeVisible()
-    await expect(page.locator('button.mode-btn', { hasText: 'Desensamblar' })).toBeVisible()
+    await expect(page.locator('button.mode-btn', { hasText: /^Ensamblar$/ })).toBeVisible()
+    await expect(page.locator('button.mode-btn', { hasText: /^Desensamblar$/ })).toBeVisible()
   })
 
   test('switching to Chinese updates the action button to "汇编"', async ({ page }) => {
@@ -587,18 +587,32 @@ test.describe('i18n / language selector', () => {
 
   test('assembler still works correctly after switching locale', async ({ page }) => {
     await page.selectOption('select.locale-select', 'fr')
-    const output = await assemble(page, {
-      input: 'add eax, ecx',
-      isa: 'x86',
-      wordSize: '32',
-      endianness: 'small',
-    })
+    // Use btn-primary directly — the assemble() helper looks for /^Assemble$/ (English only).
+    await page.fill('#input', 'add eax, ecx')
+    await page.selectOption('#selectedISA', 'x86')
+    await page.selectOption('#selectedWordSize', '32')
+    await page.selectOption('#selectedEndianness', 'small')
+    await page.click('button.btn-primary')
+    await page.waitForFunction(() => {
+      const out = document.querySelector('#output')
+      const err = document.querySelector('.error-banner')
+      return (out && out.value.trim() !== '') || (err && err.textContent.trim() !== '')
+    }, { timeout: 10_000 })
+    const output = await page.inputValue('#output')
     expect(output.trim()).toBe('01 c8')
   })
 
   test('copy button label shows translated text after clicking in French locale', async ({ page }) => {
     await page.selectOption('select.locale-select', 'fr')
-    await assemble(page, { input: 'nop', isa: 'x86', wordSize: '32', endianness: 'small' })
+    await page.fill('#input', 'nop')
+    await page.selectOption('#selectedISA', 'x86')
+    await page.selectOption('#selectedWordSize', '32')
+    await page.selectOption('#selectedEndianness', 'small')
+    await page.click('button.btn-primary')
+    await page.waitForFunction(() => {
+      const out = document.querySelector('#output')
+      return out && out.value.trim() !== ''
+    }, { timeout: 10_000 })
     await page.click('button.btn-copy')
     await expect(page.locator('button.btn-copy')).toHaveText('Copié')
   })
