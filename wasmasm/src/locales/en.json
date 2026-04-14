@@ -60,6 +60,12 @@
       "assemblyFailed": "Assembly failed. Check your input and settings and try again.",
       "disassemblyUnavailable": "Disassembly is not available in this build.",
       "disassemblyFailed": "Disassembly failed. Check your hex bytes, ISA, and settings."
+    },
+    "validation": {
+      "x86BigEndian": "x86 is little-endian only",
+      "aarch64WordSize": "AArch64 requires 64-bit",
+      "armWordSize": "Use AArch64 for 64-bit ARM",
+      "mips16bit": "MIPS requires 32-bit or 64-bit"
     }
   },
   "language": {

@@ -60,6 +60,12 @@
       "assemblyFailed": "A montagem falhou. Verifique sua entrada e configurações e tente novamente.",
       "disassemblyUnavailable": "A desmontagem não está disponível nesta compilação.",
       "disassemblyFailed": "A desmontagem falhou. Verifique seus bytes hexadecimais, ISA e configurações."
+    },
+    "validation": {
+      "x86BigEndian": "x86 suporta apenas little-endian",
+      "aarch64WordSize": "AArch64 requer 64 bits",
+      "armWordSize": "Use AArch64 para ARM de 64 bits",
+      "mips16bit": "MIPS requer 32 bits ou 64 bits"
     }
   },
   "language": {

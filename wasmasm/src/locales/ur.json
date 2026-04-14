@@ -60,6 +60,12 @@
       "assemblyFailed": "اسمبلی ناکام ہوگئی۔ اپنا ان پٹ اور سیٹنگز چیک کر کے دوبارہ کوشش کریں۔",
       "disassemblyUnavailable": "اس بلڈ میں ڈس اسمبلی دستیاب نہیں ہے۔",
       "disassemblyFailed": "ڈس اسمبلی ناکام ہوگئی۔ اپنے ہیکس بائٹس، ISA اور سیٹنگز چیک کریں۔"
+    },
+    "validation": {
+      "x86BigEndian": "x86 صرف لٹل اینڈین کو سپورٹ کرتا ہے",
+      "aarch64WordSize": "AArch64 کے لیے 64 بٹ درکار ہے",
+      "armWordSize": "64 بٹ ARM کے لیے AArch64 استعمال کریں",
+      "mips16bit": "MIPS کے لیے 32 بٹ یا 64 بٹ درکار ہے"
     }
   },
   "language": {

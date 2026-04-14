@@ -60,6 +60,12 @@
       "assemblyFailed": "汇编失败。请检查输入和设置后重试。",
       "disassemblyUnavailable": "此构建版本不提供反汇编功能。",
       "disassemblyFailed": "反汇编失败。请检查十六进制字节、ISA 和相关设置。"
+    },
+    "validation": {
+      "x86BigEndian": "x86 仅支持小端序",
+      "aarch64WordSize": "AArch64 需要 64 位",
+      "armWordSize": "64 位 ARM 请使用 AArch64",
+      "mips16bit": "MIPS 需要 32 位或 64 位"
     }
   },
   "language": {

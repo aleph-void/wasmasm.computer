@@ -60,6 +60,12 @@
       "assemblyFailed": "El ensamblado falló. Revisa la entrada y la configuración e inténtalo de nuevo.",
       "disassemblyUnavailable": "El desensamblado no está disponible en esta compilación.",
       "disassemblyFailed": "El desensamblado falló. Revisa tus bytes hexadecimales, la ISA y la configuración."
+    },
+    "validation": {
+      "x86BigEndian": "x86 solo admite little-endian",
+      "aarch64WordSize": "AArch64 requiere 64 bits",
+      "armWordSize": "Usa AArch64 para ARM de 64 bits",
+      "mips16bit": "MIPS requiere 32 o 64 bits"
     }
   },
   "language": {
