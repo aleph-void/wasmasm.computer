@@ -521,16 +521,16 @@ test.describe('i18n / language selector', () => {
   test('language selector contains all 10 supported locales', async ({ page }) => {
     const texts = await page.locator('select.locale-select option').allTextContents()
     expect(texts).toEqual(expect.arrayContaining([
-      'English',
-      '简体中文',
-      'हिन्दी',
-      'Español',
-      'Français',
-      'العربية',
-      'বাংলা',
-      'Português',
-      'Русский',
-      'اردو',
+      '🇬🇧 English',
+      '🇨🇳 简体中文',
+      '🇮🇳 हिन्दी',
+      '🇪🇸 Español',
+      '🇫🇷 Français',
+      '🇸🇦 العربية',
+      '🇧🇩 বাংলা',
+      '🇧🇷 Português',
+      '🇷🇺 Русский',
+      '🇵🇰 اردو',
     ]))
     expect(texts).toHaveLength(10)
   })
