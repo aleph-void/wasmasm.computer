@@ -11,6 +11,13 @@ module.exports = {
     '^.+\\.js$': 'babel-jest',
   },
 
+  // jsdom normally activates browser export conditions, causing vue/intlify
+  // packages to resolve to their ESM browser bundles which Jest can't parse.
+  // Override to Node-compatible conditions so CJS builds are selected instead.
+  testEnvironmentOptions: {
+    customExportConditions: ['node', 'require', 'default'],
+  },
+
   moduleNameMapper: {
     // Path alias used in source files
     '^@/(.*)$': '<rootDir>/src/$1',
