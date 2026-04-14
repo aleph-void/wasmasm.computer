@@ -33,7 +33,7 @@
       <div class="config-row">
         <div class="field-group">
           <label for="selectedISA" class="field-label">{{ $t('assembler.architecture.label') }}</label>
-          <select id="selectedISA" class="asm-select" v-model="selectedISA">
+          <select id="selectedISA" class="asm-select" :class="{ 'asm-select--invalid': isaInvalid }" v-model="selectedISA">
             <option value="" disabled>{{ $t('assembler.architecture.placeholder') }}</option>
             <option value="x86">x86</option>
             <option value="arm">ARM</option>
@@ -41,26 +41,30 @@
             <option value="mips">MIPS</option>
             <option value="ppc">PPC</option>
             <option value="sparc">SPARC</option>
+            <option value="riscv">RISC-V</option>
+            <option value="systemz">SystemZ</option>
           </select>
         </div>
 
         <div class="field-group">
           <label for="selectedWordSize" class="field-label">{{ $t('assembler.wordSize.label') }}</label>
-          <select id="selectedWordSize" class="asm-select" v-model="selectedWordSize" @change="selectedWordSizeChanged">
+          <select id="selectedWordSize" class="asm-select" :class="{ 'asm-select--invalid': wordSizeInvalid }" v-model="selectedWordSize" @change="selectedWordSizeChanged">
             <option value="" disabled>{{ $t('assembler.wordSize.placeholder') }}</option>
             <option value="16">{{ $t('assembler.wordSize.16') }}</option>
             <option value="32">{{ $t('assembler.wordSize.32') }}</option>
             <option value="64">{{ $t('assembler.wordSize.64') }}</option>
           </select>
+          <span v-if="wordSizeHint" class="field-hint">{{ wordSizeHint }}</span>
         </div>
 
         <div class="field-group">
           <label for="selectedEndianness" class="field-label">{{ $t('assembler.endianness.label') }}</label>
-          <select id="selectedEndianness" class="asm-select" v-model="selectedEndianness" @change="selectedEndiannessChanged">
+          <select id="selectedEndianness" class="asm-select" :class="{ 'asm-select--invalid': endiannessInvalid }" v-model="selectedEndianness" @change="selectedEndiannessChanged">
             <option value="" disabled>{{ $t('assembler.endianness.placeholder') }}</option>
             <option value="small">{{ $t('assembler.endianness.little') }}</option>
             <option value="big">{{ $t('assembler.endianness.big') }}</option>
           </select>
+          <span v-if="endiannessHint" class="field-hint">{{ endiannessHint }}</span>
         </div>
       </div>
 
@@ -128,6 +132,7 @@ export default {
       assembler: null,
       errorMessage: "",
       copied: false,
+      validated: false,
     }
   },
   computed: {
@@ -145,6 +150,45 @@ export default {
       return this.copied
         ? this.$t('assembler.output.copied')
         : this.$t('assembler.output.copy')
+    },
+    isaInvalid() {
+      return this.validated && !this.selectedISA
+    },
+    wordSizeInvalid() {
+      if (!this.validated) return false
+      // SystemZ ignores word size — any value (including unset) is fine
+      if (this.selectedISA === 'systemz') return false
+      if (!this.selectedWordSize) return true
+      if (this.selectedISA === 'aarch64' && this.selectedWordSize !== '64') return true
+      if (this.selectedISA === 'arm'     && this.selectedWordSize === '64') return true
+      if (this.selectedISA === 'mips'    && this.selectedWordSize === '16') return true
+      if (this.selectedISA === 'riscv'   && this.selectedWordSize === '16') return true
+      return false
+    },
+    endiannessInvalid() {
+      if (!this.validated) return false
+      if (this.selectedISA === 'systemz') {
+        // only invalid if explicitly set to little-endian; unset is fine (ignored by C)
+        return this.selectedEndianness === 'small'
+      }
+      if (!this.selectedEndianness) return true
+      if (this.selectedISA === 'x86' && this.selectedEndianness === 'big') return true
+      return false
+    },
+    wordSizeHint() {
+      if (!this.validated || !this.selectedISA || !this.selectedWordSize) return ''
+      if (this.selectedISA === 'aarch64' && this.selectedWordSize !== '64') return this.$t('assembler.validation.aarch64WordSize')
+      if (this.selectedISA === 'arm'     && this.selectedWordSize === '64') return this.$t('assembler.validation.armWordSize')
+      if (this.selectedISA === 'mips'    && this.selectedWordSize === '16') return this.$t('assembler.validation.mips16bit')
+      if (this.selectedISA === 'riscv'   && this.selectedWordSize === '16') return this.$t('assembler.validation.riscv16bit')
+      return ''
+    },
+    endiannessHint() {
+      if (!this.validated || !this.selectedISA) return ''
+      if (this.selectedISA === 'systemz' && this.selectedEndianness === 'small') return this.$t('assembler.validation.systemzLittleEndian')
+      if (!this.selectedEndianness) return ''
+      if (this.selectedISA === 'x86' && this.selectedEndianness === 'big') return this.$t('assembler.validation.x86BigEndian')
+      return ''
     },
   },
   async created() {
@@ -184,6 +228,7 @@ export default {
       navigator.clipboard.writeText(link);
     },
     actionClicked() {
+      this.validated = true;
       if (this.mode === 'assemble') {
         this._runAssemble();
       } else {
@@ -373,6 +418,20 @@ export default {
 .asm-select:focus {
   outline: none;
   border-color: var(--accent-light);
+}
+
+.asm-select--invalid {
+  border-color: rgba(220, 38, 38, 0.7);
+}
+
+.asm-select--invalid:focus {
+  border-color: rgba(220, 38, 38, 0.9);
+}
+
+.field-hint {
+  font-size: 0.7rem;
+  color: #f87171;
+  margin-top: 0.1rem;
 }
 
 /* Panes */

@@ -3,13 +3,14 @@
     "subtitle": "Ассемблер WebAssembly",
     "links": {
       "keystone": "Keystone",
-      "blog": "StarkeBlog"
+      "capstone": "Capstone"
     }
   },
   "footer": {
-    "text": "Создано с использованием {keystone}, скомпилированного в WebAssembly, автор — {alephvoid}",
+    "text": "Создано с использованием {keystone} и {capstone}, скомпилированных в WebAssembly, автор — {alephvoid}",
     "keystoneName": "Keystone Engine",
-    "alephvoidName": "Aleph Void LLC"
+    "alephvoidName": "Aleph Void LLC",
+    "capstoneName": "Capstone Engine"
   },
   "assembler": {
     "sectionLabel": "// Ассемблер",
@@ -60,6 +61,14 @@
       "assemblyFailed": "Сборка не удалась. Проверьте ввод и настройки и попробуйте снова.",
       "disassemblyUnavailable": "Дизассемблирование недоступно в этой сборке.",
       "disassemblyFailed": "Дизассемблирование не удалось. Проверьте шестнадцатеричные байты, ISA и настройки."
+    },
+    "validation": {
+      "x86BigEndian": "x86 поддерживает только little-endian",
+      "aarch64WordSize": "AArch64 требует 64-битный режим",
+      "armWordSize": "Для 64-битного ARM используйте AArch64",
+      "mips16bit": "MIPS требует 32-битный или 64-битный режим",
+      "riscv16bit": "RISC-V требует 32-битный или 64-битный режим",
+      "systemzLittleEndian": "SystemZ поддерживает только big-endian"
     }
   },
   "language": {
