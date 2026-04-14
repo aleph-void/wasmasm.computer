@@ -65,7 +65,9 @@
       "x86BigEndian": "يدعم x86 وضع الطرفية الصغرى فقط",
       "aarch64WordSize": "يتطلب AArch64 وضع 64 بت",
       "armWordSize": "استخدم AArch64 لمعمارية ARM ‏64 بت",
-      "mips16bit": "يتطلب MIPS وضع 32 بت أو 64 بت"
+      "mips16bit": "يتطلب MIPS وضع 32 بت أو 64 بت",
+      "riscv16bit": "يتطلب RISC-V وضع 32 بت أو 64 بت",
+      "systemzLittleEndian": "يدعم SystemZ وضع الطرفية الكبرى فقط"
     }
   },
   "language": {

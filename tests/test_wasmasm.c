@@ -217,6 +217,36 @@ static void test_assemble_sparc(void)
            "add %g1, %g2, %g3", "sparc", 1, 32, "86 00 40 02 ");
 }
 
+/* ── assemble: RISC-V ────────────────────────────────────────────────────── */
+
+static void test_assemble_riscv(void)
+{
+    printf("\n=== Assemble: RISC-V tests ===\n");
+
+    /* Keystone emits the compressed (C-extension) form by default:
+       c.nop = 0x0001 → LE bytes 01 00 */
+    RUN_OK("riscv 32-bit: nop (c.nop)",
+           "nop", "riscv", 0, 32, "01 00 ");
+
+    RUN_OK("riscv 64-bit: nop (c.nop)",
+           "nop", "riscv", 0, 64, "01 00 ");
+
+    /* 16-bit word size is not valid for RISC-V */
+    RUN_ERR("reject riscv with word_size=16",
+            "nop", "riscv", 0, 16);
+}
+
+/* ── assemble: SystemZ ───────────────────────────────────────────────────── */
+
+static void test_assemble_systemz(void)
+{
+    printf("\n=== Assemble: SystemZ tests ===\n");
+
+    /* a %r0, 4095(%r15,%r1) → 5a 0f 1f ff (from keystone regression suite) */
+    RUN_OK("systemz: a %r0, 4095(%r15,%r1)",
+           "a %r0, 4095(%r15,%r1)", "systemz", 1, 32, "5a 0f 1f ff ");
+}
+
 /* ── disassemble: error paths ────────────────────────────────────────────── */
 
 static void test_disassemble_error_paths(void)
@@ -301,6 +331,36 @@ static void test_disassemble_sparc(void)
     /* 86 00 40 02 = add %g1, %g2, %g3 (SPARC BE) */
     DISASM_CONTAINS("sparc 32-bit big-endian: 86 00 40 02 → add",
                     "86 00 40 02", "sparc", 1, 32, "add");
+}
+
+/* ── disassemble: RISC-V ─────────────────────────────────────────────────── */
+
+static void test_disassemble_riscv(void)
+{
+    printf("\n=== Disassemble: RISC-V tests ===\n");
+
+    /* 13 00 00 00 = addi x0, x0, 0 — Capstone decodes this as "nop" */
+    DISASM_CONTAINS("riscv 32-bit: 13 00 00 00 → nop",
+                    "13 00 00 00", "riscv", 2, 32, "nop");
+
+    /* 13 04 a8 7a = addi s0, a6, 0x7a8 (RISCV64 LE, from capstone test) */
+    DISASM_CONTAINS("riscv 64-bit: 13 04 a8 7a → addi",
+                    "13 04 a8 7a", "riscv", 2, 64, "addi");
+
+    /* 16-bit word size is not valid for RISC-V */
+    DISASM_ERR("reject riscv with word_size=16",
+               "13 00 00 00", "riscv", 2, 16);
+}
+
+/* ── disassemble: SystemZ ────────────────────────────────────────────────── */
+
+static void test_disassemble_systemz(void)
+{
+    printf("\n=== Disassemble: SystemZ tests ===\n");
+
+    /* 5a 0f 1f ff = a %r0, 4095(%r15,%r1) (SystemZ BE) */
+    DISASM_CONTAINS("systemz: 5a 0f 1f ff → a (add)",
+                    "5a 0f 1f ff", "systemz", 1, 32, "a");
 }
 
 /* ── disassemble: MIPS ───────────────────────────────────────────────────── */
@@ -460,6 +520,8 @@ int main(void)
     test_assemble_mips();
     test_assemble_ppc();
     test_assemble_sparc();
+    test_assemble_riscv();
+    test_assemble_systemz();
 
     test_disassemble_error_paths();
     test_disassemble_x86();
@@ -467,6 +529,8 @@ int main(void)
     test_disassemble_aarch64();
     test_disassemble_mips();
     test_disassemble_sparc();
+    test_disassemble_riscv();
+    test_disassemble_systemz();
     test_hex_parser();
     test_disassemble_output_format();
 

@@ -25,7 +25,7 @@ int assemble(char *input, int input_size, char *isa, int endianness, int word_si
         _isa = KS_ARCH_ARM;
       } else if (strcmp("aarch64", isa) == 0){
         _isa = KS_ARCH_ARM64;
-      }else if (strcmp("x86", isa) == 0) {
+      } else if (strcmp("x86", isa) == 0) {
         _isa = KS_ARCH_X86;
       } else if (strcmp("ppc", isa) == 0) {
         _isa = KS_ARCH_PPC;
@@ -33,6 +33,10 @@ int assemble(char *input, int input_size, char *isa, int endianness, int word_si
         _isa = KS_ARCH_MIPS;
       } else if (strcmp("sparc", isa) == 0) {
         _isa = KS_ARCH_SPARC;
+      } else if (strcmp("riscv", isa) == 0) {
+        _isa = KS_ARCH_RISCV;
+      } else if (strcmp("systemz", isa) == 0) {
+        _isa = KS_ARCH_SYSTEMZ;
       } else {
         printf("ERROR: Incorrect ISA!\n");
         return -1;
@@ -46,6 +50,18 @@ int assemble(char *input, int input_size, char *isa, int endianness, int word_si
           return -1;
         }
         mode = KS_MODE_LITTLE_ENDIAN; // endianness flag applied below
+      } else if (strcmp("riscv", isa) == 0) {
+        if (word_size == 32) {
+          mode = KS_MODE_RISCV32;
+        } else if (word_size == 64) {
+          mode = KS_MODE_RISCV64;
+        } else {
+          printf("ERROR: RISC-V supports 32-bit or 64-bit only\n");
+          return -1;
+        }
+      } else if (strcmp("systemz", isa) == 0) {
+        // SystemZ (S/390) is always big-endian; word_size is not relevant
+        mode = KS_MODE_BIG_ENDIAN;
       } else if (word_size == 16) {
         if (strcmp("arm", isa) == 0) {
           mode = KS_MODE_THUMB;
@@ -70,7 +86,10 @@ int assemble(char *input, int input_size, char *isa, int endianness, int word_si
         return -1;
       }
 
-      if (endianness == 1 && strcmp("x86", isa) != 0) {
+      // riscv is always little-endian; systemz has big-endian already set above
+      if (endianness == 1 && strcmp("x86", isa) != 0
+                          && strcmp("riscv", isa) != 0
+                          && strcmp("systemz", isa) != 0) {
         mode = mode + KS_MODE_BIG_ENDIAN;
       } else if (endianness == 2 && strcmp("sparc", isa) == 0){
         mode = mode + KS_MODE_LITTLE_ENDIAN;
@@ -166,6 +185,10 @@ int disassemble(char *input, int input_size, char *isa, int endianness, int word
         _isa = CS_ARCH_MIPS;
     } else if (strcmp("sparc", isa) == 0) {
         _isa = CS_ARCH_SPARC;
+    } else if (strcmp("riscv", isa) == 0) {
+        _isa = CS_ARCH_RISCV;
+    } else if (strcmp("systemz", isa) == 0) {
+        _isa = CS_ARCH_SYSTEMZ;
     } else {
         printf("ERROR: Incorrect ISA!\n");
         free(bytes);
@@ -180,6 +203,19 @@ int disassemble(char *input, int input_size, char *isa, int endianness, int word
             return -1;
         }
         mode = CS_MODE_LITTLE_ENDIAN;
+    } else if (strcmp("riscv", isa) == 0) {
+        if (word_size == 32) {
+            mode = CS_MODE_RISCV32;
+        } else if (word_size == 64) {
+            mode = CS_MODE_RISCV64;
+        } else {
+            printf("ERROR: RISC-V supports 32-bit or 64-bit only\n");
+            free(bytes);
+            return -1;
+        }
+    } else if (strcmp("systemz", isa) == 0) {
+        // SystemZ is always big-endian; word_size is not relevant
+        mode = CS_MODE_BIG_ENDIAN;
     } else if (strcmp("arm", isa) == 0) {
         if (word_size == 16) {
             mode = CS_MODE_THUMB;
@@ -219,7 +255,10 @@ int disassemble(char *input, int input_size, char *isa, int endianness, int word
     }
 
     /* apply endianness where not fixed by the architecture */
-    if (strcmp("x86", isa) != 0 && strcmp("sparc", isa) != 0) {
+    /* riscv is always little-endian; systemz has big-endian set above */
+    if (strcmp("x86", isa) != 0 && strcmp("sparc", isa) != 0
+                                 && strcmp("riscv", isa) != 0
+                                 && strcmp("systemz", isa) != 0) {
         if (endianness == 1) {
             mode |= CS_MODE_BIG_ENDIAN;
         }

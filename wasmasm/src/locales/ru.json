@@ -65,7 +65,9 @@
       "x86BigEndian": "x86 поддерживает только little-endian",
       "aarch64WordSize": "AArch64 требует 64-битный режим",
       "armWordSize": "Для 64-битного ARM используйте AArch64",
-      "mips16bit": "MIPS требует 32-битный или 64-битный режим"
+      "mips16bit": "MIPS требует 32-битный или 64-битный режим",
+      "riscv16bit": "RISC-V требует 32-битный или 64-битный режим",
+      "systemzLittleEndian": "SystemZ поддерживает только big-endian"
     }
   },
   "language": {

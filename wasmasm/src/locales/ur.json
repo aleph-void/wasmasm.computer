@@ -65,7 +65,9 @@
       "x86BigEndian": "x86 صرف لٹل اینڈین کو سپورٹ کرتا ہے",
       "aarch64WordSize": "AArch64 کے لیے 64 بٹ درکار ہے",
       "armWordSize": "64 بٹ ARM کے لیے AArch64 استعمال کریں",
-      "mips16bit": "MIPS کے لیے 32 بٹ یا 64 بٹ درکار ہے"
+      "mips16bit": "MIPS کے لیے 32 بٹ یا 64 بٹ درکار ہے",
+      "riscv16bit": "RISC-V کے لیے 32 بٹ یا 64 بٹ درکار ہے",
+      "systemzLittleEndian": "SystemZ صرف بگ اینڈین کو سپورٹ کرتا ہے"
     }
   },
   "language": {

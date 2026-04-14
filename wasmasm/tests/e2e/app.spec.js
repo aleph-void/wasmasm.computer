@@ -84,7 +84,7 @@ test.describe('page structure', () => {
 
   test('renders the ISA select with all supported architectures', async ({ page }) => {
     const options = await page.locator('#selectedISA option:not([disabled])').allTextContents()
-    expect(options).toEqual(expect.arrayContaining(['x86', 'ARM', 'AArch64', 'MIPS', 'PPC', 'SPARC']))
+    expect(options).toEqual(expect.arrayContaining(['x86', 'ARM', 'AArch64', 'MIPS', 'PPC', 'SPARC', 'RISC-V', 'SystemZ']))
   })
 
   test('renders word-size options 16, 32 and 64-bit', async ({ page }) => {

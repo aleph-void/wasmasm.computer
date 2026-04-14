@@ -65,7 +65,9 @@
       "x86BigEndian": "x86 仅支持小端序",
       "aarch64WordSize": "AArch64 需要 64 位",
       "armWordSize": "64 位 ARM 请使用 AArch64",
-      "mips16bit": "MIPS 需要 32 位或 64 位"
+      "mips16bit": "MIPS 需要 32 位或 64 位",
+      "riscv16bit": "RISC-V 需要 32 位或 64 位",
+      "systemzLittleEndian": "SystemZ 仅支持大端序"
     }
   },
   "language": {

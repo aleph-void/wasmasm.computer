@@ -65,7 +65,9 @@
       "x86BigEndian": "x86 केवल लिटिल-एंडियन का समर्थन करता है",
       "aarch64WordSize": "AArch64 के लिए 64-बिट आवश्यक है",
       "armWordSize": "64-बिट ARM के लिए AArch64 का उपयोग करें",
-      "mips16bit": "MIPS के लिए 32-बिट या 64-बिट आवश्यक है"
+      "mips16bit": "MIPS के लिए 32-बिट या 64-बिट आवश्यक है",
+      "riscv16bit": "RISC-V के लिए 32-बिट या 64-बिट आवश्यक है",
+      "systemzLittleEndian": "SystemZ केवल बिग-एंडियन का समर्थन करता है"
     }
   },
   "language": {

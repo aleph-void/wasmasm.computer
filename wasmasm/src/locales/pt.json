@@ -65,7 +65,9 @@
       "x86BigEndian": "x86 suporta apenas little-endian",
       "aarch64WordSize": "AArch64 requer 64 bits",
       "armWordSize": "Use AArch64 para ARM de 64 bits",
-      "mips16bit": "MIPS requer 32 bits ou 64 bits"
+      "mips16bit": "MIPS requer 32 bits ou 64 bits",
+      "riscv16bit": "RISC-V requer 32 bits ou 64 bits",
+      "systemzLittleEndian": "SystemZ suporta apenas big-endian"
     }
   },
   "language": {

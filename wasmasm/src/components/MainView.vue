@@ -41,6 +41,8 @@
             <option value="mips">MIPS</option>
             <option value="ppc">PPC</option>
             <option value="sparc">SPARC</option>
+            <option value="riscv">RISC-V</option>
+            <option value="systemz">SystemZ</option>
           </select>
         </div>
 
@@ -154,14 +156,21 @@ export default {
     },
     wordSizeInvalid() {
       if (!this.validated) return false
+      // SystemZ ignores word size — any value (including unset) is fine
+      if (this.selectedISA === 'systemz') return false
       if (!this.selectedWordSize) return true
       if (this.selectedISA === 'aarch64' && this.selectedWordSize !== '64') return true
       if (this.selectedISA === 'arm'     && this.selectedWordSize === '64') return true
       if (this.selectedISA === 'mips'    && this.selectedWordSize === '16') return true
+      if (this.selectedISA === 'riscv'   && this.selectedWordSize === '16') return true
       return false
     },
     endiannessInvalid() {
       if (!this.validated) return false
+      if (this.selectedISA === 'systemz') {
+        // only invalid if explicitly set to little-endian; unset is fine (ignored by C)
+        return this.selectedEndianness === 'small'
+      }
       if (!this.selectedEndianness) return true
       if (this.selectedISA === 'x86' && this.selectedEndianness === 'big') return true
       return false
@@ -171,10 +180,13 @@ export default {
       if (this.selectedISA === 'aarch64' && this.selectedWordSize !== '64') return this.$t('assembler.validation.aarch64WordSize')
       if (this.selectedISA === 'arm'     && this.selectedWordSize === '64') return this.$t('assembler.validation.armWordSize')
       if (this.selectedISA === 'mips'    && this.selectedWordSize === '16') return this.$t('assembler.validation.mips16bit')
+      if (this.selectedISA === 'riscv'   && this.selectedWordSize === '16') return this.$t('assembler.validation.riscv16bit')
       return ''
     },
     endiannessHint() {
-      if (!this.validated || !this.selectedISA || !this.selectedEndianness) return ''
+      if (!this.validated || !this.selectedISA) return ''
+      if (this.selectedISA === 'systemz' && this.selectedEndianness === 'small') return this.$t('assembler.validation.systemzLittleEndian')
+      if (!this.selectedEndianness) return ''
       if (this.selectedISA === 'x86' && this.selectedEndianness === 'big') return this.$t('assembler.validation.x86BigEndian')
       return ''
     },
