@@ -4,6 +4,7 @@ import App from './App.vue'
 
 import MainView from './components/MainView.vue'
 import { createMemoryHistory, createRouter } from 'vue-router'
+import i18n from './i18n'
 
 const routes = [
     { name: "Main", path: '/', component: MainView }
@@ -14,6 +15,7 @@ const router = createRouter({
     routes,
 })
 
-const app = createApp(App);
+const app = createApp(App)
 app.use(router)
-app.mount("#app") 
+app.use(i18n)
+app.mount('#app')

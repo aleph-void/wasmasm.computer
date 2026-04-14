@@ -1,0 +1,78 @@
+{
+  "nav": {
+    "subtitle": "WebAssembly অ্যাসেম্বলার",
+    "links": {
+      "keystone": "Keystone",
+      "blog": "StarkeBlog"
+    }
+  },
+  "footer": {
+    "text": "WebAssembly-এ কম্পাইল করা {keystone} দিয়ে নির্মিত, তৈরি করেছেন {alephvoid}",
+    "keystoneName": "Keystone Engine",
+    "alephvoidName": "Aleph Void LLC"
+  },
+  "assembler": {
+    "sectionLabel": "// অ্যাসেম্বলার",
+    "title": "ব্রাউজার-ভিত্তিক CPU অ্যাসেম্বলার",
+    "description": "অ্যাসেম্বলি নির্দেশনা বা হেক্স বাইট পেস্ট করুন, লক্ষ্য আর্কিটেকচার নির্বাচন করুন, তারপর অ্যাকশন বোতামে ক্লিক করুন। WebAssembly-এ কম্পাইল করা {keystone} (assemble) এবং {capstone} (disassemble) দ্বারা চালিত।",
+    "mode": {
+      "ariaLabel": "মোড",
+      "assemble": "অ্যাসেম্বল",
+      "disassemble": "ডিসঅ্যাসেম্বল"
+    },
+    "architecture": {
+      "label": "আর্কিটেকচার",
+      "placeholder": "ISA নির্বাচন করুন"
+    },
+    "wordSize": {
+      "label": "ওয়ার্ড সাইজ",
+      "placeholder": "সাইজ নির্বাচন করুন",
+      "16": "16-বিট",
+      "32": "32-বিট",
+      "64": "64-বিট"
+    },
+    "endianness": {
+      "label": "এন্ডিয়াননেস",
+      "placeholder": "এন্ডিয়ান নির্বাচন করুন",
+      "little": "লিটল-এন্ডিয়ান",
+      "big": "বিগ-এন্ডিয়ান"
+    },
+    "input": {
+      "labelAssemble": "// ইনপুট (অ্যাসেম্বলি)",
+      "labelDisassemble": "// ইনপুট (হেক্স বাইট)",
+      "placeholderAssemble": "mov eax, edx",
+      "placeholderDisassemble": "89 d0"
+    },
+    "output": {
+      "labelAssemble": "// আউটপুট (হেক্স বাইট)",
+      "labelDisassemble": "// আউটপুট (অ্যাসেম্বলি)",
+      "placeholderAssemble": "অ্যাসেম্বল করা বাইট এখানে দেখা যাবে",
+      "placeholderDisassemble": "ডিসঅ্যাসেম্বল করা নির্দেশনা এখানে দেখা যাবে",
+      "copy": "কপি",
+      "copied": "কপি হয়েছে!"
+    },
+    "actions": {
+      "assemble": "অ্যাসেম্বল",
+      "disassemble": "ডিসঅ্যাসেম্বল",
+      "copyLink": "লিংক কপি করুন"
+    },
+    "errors": {
+      "assemblyFailed": "অ্যাসেম্বলি ব্যর্থ হয়েছে। ইনপুট ও সেটিংস পরীক্ষা করে আবার চেষ্টা করুন।",
+      "disassemblyUnavailable": "এই বিল্ডে ডিসঅ্যাসেম্বলি উপলব্ধ নয়।",
+      "disassemblyFailed": "ডিসঅ্যাসেম্বলি ব্যর্থ হয়েছে। হেক্স বাইট, ISA এবং সেটিংস পরীক্ষা করুন।"
+    }
+  },
+  "language": {
+    "label": "ভাষা",
+    "en": "English",
+    "zh-CN": "简体中文",
+    "hi": "हिन्दी",
+    "es": "Español",
+    "fr": "Français",
+    "ar": "العربية",
+    "bn": "বাংলা",
+    "pt": "Português",
+    "ru": "Русский",
+    "ur": "اردو"
+  }
+}

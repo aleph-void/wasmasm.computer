@@ -4,11 +4,23 @@
       <div class="nav-inner">
         <div class="nav-brand">
           <span class="nav-title">WASMASM</span>
-          <span class="nav-tag">WebAssembly Assembler</span>
+          <span class="nav-tag">{{ $t('nav.subtitle') }}</span>
         </div>
         <nav class="nav-links">
-          <a href="https://www.keystone-engine.org/" target="_blank" rel="noopener">Keystone</a>
-          <a href="https://starkeblog.com/" target="_blank" rel="noopener">StarkeBlog</a>
+          <a href="https://www.keystone-engine.org/" target="_blank" rel="noopener">{{ $t('nav.links.keystone') }}</a>
+          <a href="https://starkeblog.com/" target="_blank" rel="noopener">{{ $t('nav.links.blog') }}</a>
+          <select
+            class="locale-select"
+            :value="currentLocale"
+            :aria-label="$t('language.label')"
+            @change="setLocale($event.target.value)"
+          >
+            <option
+              v-for="loc in supportedLocales"
+              :key="loc.code"
+              :value="loc.code"
+            >{{ loc.nativeName }}</option>
+          </select>
         </nav>
       </div>
     </header>
@@ -18,14 +30,39 @@
     </main>
 
     <footer class="site-footer">
-      <p>Built with <a href="https://www.keystone-engine.org/" target="_blank" rel="noopener">Keystone Engine</a> compiled to WebAssembly &mdash; created by <a href="https://alephvoid.com/" target="_blank" rel="noopener">Aleph Void LLC</a></p>
+      <i18n-t keypath="footer.text" tag="p">
+        <template #keystone>
+          <a href="https://www.keystone-engine.org/" target="_blank" rel="noopener">{{ $t('footer.keystoneName') }}</a>
+        </template>
+        <template #alephvoid>
+          <a href="https://alephvoid.com/" target="_blank" rel="noopener">{{ $t('footer.alephvoidName') }}</a>
+        </template>
+      </i18n-t>
     </footer>
   </div>
 </template>
 
 <script>
+import { SUPPORTED_LOCALES } from './i18n'
+
 export default {
   name: 'WasmAsm',
+  data() {
+    return {
+      supportedLocales: SUPPORTED_LOCALES,
+    }
+  },
+  computed: {
+    currentLocale() {
+      return this.$i18n.locale
+    },
+  },
+  methods: {
+    setLocale(code) {
+      this.$i18n.locale = code
+      try { localStorage.setItem('wasmasm_locale', code) } catch { /* noop */ }
+    },
+  },
 }
 </script>
 
@@ -128,6 +165,28 @@ body {
 
 .nav-links a:hover {
   color: var(--text-primary);
+}
+
+.locale-select {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text-secondary);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 500;
+  padding: 0.2rem 0.5rem;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.locale-select:hover,
+.locale-select:focus {
+  border-color: var(--accent-light);
+  color: var(--text-primary);
+  outline: none;
 }
 
 /* Main content */

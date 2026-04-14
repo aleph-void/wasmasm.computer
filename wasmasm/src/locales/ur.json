@@ -1,0 +1,78 @@
+{
+  "nav": {
+    "subtitle": "WebAssembly اسمبلر",
+    "links": {
+      "keystone": "Keystone",
+      "blog": "StarkeBlog"
+    }
+  },
+  "footer": {
+    "text": "{keystone} کو WebAssembly میں کمپائل کر کے بنایا گیا، تخلیق کار {alephvoid}",
+    "keystoneName": "Keystone Engine",
+    "alephvoidName": "Aleph Void LLC"
+  },
+  "assembler": {
+    "sectionLabel": "// اسمبلر",
+    "title": "براؤزر پر مبنی CPU اسمبلر",
+    "description": "اسمبلی ہدایات یا ہیکس بائٹس پیسٹ کریں، اپنی ہدف معماری منتخب کریں، پھر ایکشن بٹن پر کلک کریں۔ یہ WebAssembly میں کمپائل کیے گئے {keystone} (assemble) اور {capstone} (disassemble) سے چلتا ہے۔",
+    "mode": {
+      "ariaLabel": "موڈ",
+      "assemble": "اسمبل",
+      "disassemble": "ڈس اسمبل"
+    },
+    "architecture": {
+      "label": "معماری",
+      "placeholder": "ISA منتخب کریں"
+    },
+    "wordSize": {
+      "label": "ورڈ سائز",
+      "placeholder": "سائز منتخب کریں",
+      "16": "16-بٹ",
+      "32": "32-بٹ",
+      "64": "64-بٹ"
+    },
+    "endianness": {
+      "label": "بائٹ ترتیب",
+      "placeholder": "ترتیب منتخب کریں",
+      "little": "لٹل-اینڈین",
+      "big": "بگ-اینڈین"
+    },
+    "input": {
+      "labelAssemble": "// ان پٹ (اسمبلی)",
+      "labelDisassemble": "// ان پٹ (ہیکس بائٹس)",
+      "placeholderAssemble": "mov eax, edx",
+      "placeholderDisassemble": "89 d0"
+    },
+    "output": {
+      "labelAssemble": "// آؤٹ پٹ (ہیکس بائٹس)",
+      "labelDisassemble": "// آؤٹ پٹ (اسمبلی)",
+      "placeholderAssemble": "اسمبل کیے گئے بائٹس یہاں ظاہر ہوں گے",
+      "placeholderDisassemble": "ڈس اسمبل کی گئی ہدایات یہاں ظاہر ہوں گی",
+      "copy": "کاپی کریں",
+      "copied": "کاپی ہو گیا!"
+    },
+    "actions": {
+      "assemble": "اسمبل",
+      "disassemble": "ڈس اسمبل",
+      "copyLink": "لنک کاپی کریں"
+    },
+    "errors": {
+      "assemblyFailed": "اسمبلی ناکام ہوگئی۔ اپنا ان پٹ اور سیٹنگز چیک کر کے دوبارہ کوشش کریں۔",
+      "disassemblyUnavailable": "اس بلڈ میں ڈس اسمبلی دستیاب نہیں ہے۔",
+      "disassemblyFailed": "ڈس اسمبلی ناکام ہوگئی۔ اپنے ہیکس بائٹس، ISA اور سیٹنگز چیک کریں۔"
+    }
+  },
+  "language": {
+    "label": "زبان",
+    "en": "English",
+    "zh-CN": "简体中文",
+    "hi": "हिन्दी",
+    "es": "Español",
+    "fr": "Français",
+    "ar": "العربية",
+    "bn": "বাংলা",
+    "pt": "Português",
+    "ru": "Русский",
+    "ur": "اردو"
+  }
+}

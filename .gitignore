@@ -1,5 +1,6 @@
 .vscode
 .claude
+.codex
 # Ignore the old root-level vendor copies (replaced by third_party/ submodules)
 /keystone
 /capstone

@@ -3,36 +3,38 @@
     <div class="assembler-shell">
 
       <div class="assembler-header">
-        <p class="section-label">// Assembler</p>
-        <h1 class="assembler-title">Browser-based CPU Assembler</h1>
-        <p class="assembler-desc">
-          Paste assembly instructions or hex bytes, choose your target architecture, and click the action button.
-          Powered by <a href="https://www.keystone-engine.org/" target="_blank" rel="noopener">Keystone</a>
-          (assemble) and <a href="https://www.capstone-engine.org/" target="_blank" rel="noopener">Capstone</a>
-          (disassemble) compiled to WebAssembly.
-        </p>
+        <p class="section-label">{{ $t('assembler.sectionLabel') }}</p>
+        <h1 class="assembler-title">{{ $t('assembler.title') }}</h1>
+        <i18n-t keypath="assembler.description" tag="p" class="assembler-desc">
+          <template #keystone>
+            <a href="https://www.keystone-engine.org/" target="_blank" rel="noopener">Keystone</a>
+          </template>
+          <template #capstone>
+            <a href="https://www.capstone-engine.org/" target="_blank" rel="noopener">Capstone</a>
+          </template>
+        </i18n-t>
       </div>
 
-      <div class="mode-toggle" role="group" aria-label="Mode">
+      <div class="mode-toggle" role="group" :aria-label="$t('assembler.mode.ariaLabel')">
         <button
           class="mode-btn"
           :class="{ 'mode-btn--active': mode === 'assemble' }"
           type="button"
           @click="setMode('assemble')"
-        >Assemble</button>
+        >{{ $t('assembler.mode.assemble') }}</button>
         <button
           class="mode-btn"
           :class="{ 'mode-btn--active': mode === 'disassemble' }"
           type="button"
           @click="setMode('disassemble')"
-        >Disassemble</button>
+        >{{ $t('assembler.mode.disassemble') }}</button>
       </div>
 
       <div class="config-row">
         <div class="field-group">
-          <label for="selectedISA" class="field-label">Architecture</label>
+          <label for="selectedISA" class="field-label">{{ $t('assembler.architecture.label') }}</label>
           <select id="selectedISA" class="asm-select" v-model="selectedISA">
-            <option value="" disabled>Select ISA</option>
+            <option value="" disabled>{{ $t('assembler.architecture.placeholder') }}</option>
             <option value="x86">x86</option>
             <option value="arm">ARM</option>
             <option value="aarch64">AArch64</option>
@@ -43,28 +45,28 @@
         </div>
 
         <div class="field-group">
-          <label for="selectedWordSize" class="field-label">Word Size</label>
+          <label for="selectedWordSize" class="field-label">{{ $t('assembler.wordSize.label') }}</label>
           <select id="selectedWordSize" class="asm-select" v-model="selectedWordSize" @change="selectedWordSizeChanged">
-            <option value="" disabled>Select size</option>
-            <option value="16">16-bit</option>
-            <option value="32">32-bit</option>
-            <option value="64">64-bit</option>
+            <option value="" disabled>{{ $t('assembler.wordSize.placeholder') }}</option>
+            <option value="16">{{ $t('assembler.wordSize.16') }}</option>
+            <option value="32">{{ $t('assembler.wordSize.32') }}</option>
+            <option value="64">{{ $t('assembler.wordSize.64') }}</option>
           </select>
         </div>
 
         <div class="field-group">
-          <label for="selectedEndianness" class="field-label">Endianness</label>
+          <label for="selectedEndianness" class="field-label">{{ $t('assembler.endianness.label') }}</label>
           <select id="selectedEndianness" class="asm-select" v-model="selectedEndianness" @change="selectedEndiannessChanged">
-            <option value="" disabled>Select endian</option>
-            <option value="small">Little-endian</option>
-            <option value="big">Big-endian</option>
+            <option value="" disabled>{{ $t('assembler.endianness.placeholder') }}</option>
+            <option value="small">{{ $t('assembler.endianness.little') }}</option>
+            <option value="big">{{ $t('assembler.endianness.big') }}</option>
           </select>
         </div>
       </div>
 
       <div class="pane-row">
         <div class="pane">
-          <p class="section-label">{{ mode === 'assemble' ? '// Input (assembly)' : '// Input (hex bytes)' }}</p>
+          <p class="section-label">{{ mode === 'assemble' ? $t('assembler.input.labelAssemble') : $t('assembler.input.labelDisassemble') }}</p>
           <textarea
             id="input"
             class="asm-textarea"
@@ -76,7 +78,7 @@
 
         <div class="pane">
           <div class="pane-header">
-            <p class="section-label">{{ mode === 'assemble' ? '// Output (hex bytes)' : '// Output (assembly)' }}</p>
+            <p class="section-label">{{ mode === 'assemble' ? $t('assembler.output.labelAssemble') : $t('assembler.output.labelDisassemble') }}</p>
             <button
               v-if="output"
               class="btn-copy"
@@ -102,9 +104,9 @@
 
       <div class="action-row">
         <button class="btn-primary" @click="actionClicked">
-          {{ mode === 'assemble' ? 'Assemble' : 'Disassemble' }}
+          {{ mode === 'assemble' ? $t('assembler.actions.assemble') : $t('assembler.actions.disassemble') }}
         </button>
-        <button class="btn-ghost" @click="copyClicked">Copy Link</button>
+        <button class="btn-ghost" @click="copyClicked">{{ $t('assembler.actions.copyLink') }}</button>
       </div>
 
     </div>
@@ -125,16 +127,25 @@ export default {
       selectedEndianness: "",
       assembler: null,
       errorMessage: "",
-      copyOutputLabel: "Copy"
+      copied: false,
     }
   },
   computed: {
     inputPlaceholder() {
-      return this.mode === 'assemble' ? 'mov eax, edx' : '89 d0'
+      return this.mode === 'assemble'
+        ? this.$t('assembler.input.placeholderAssemble')
+        : this.$t('assembler.input.placeholderDisassemble')
     },
     outputPlaceholder() {
-      return this.mode === 'assemble' ? 'assembled bytes appear here' : 'disassembled instructions appear here'
-    }
+      return this.mode === 'assemble'
+        ? this.$t('assembler.output.placeholderAssemble')
+        : this.$t('assembler.output.placeholderDisassemble')
+    },
+    copyOutputLabel() {
+      return this.copied
+        ? this.$t('assembler.output.copied')
+        : this.$t('assembler.output.copy')
+    },
   },
   async created() {
     this.assembler = await assemblyModule();
@@ -154,12 +165,12 @@ export default {
       this.mode = m;
       this.output = "";
       this.errorMessage = "";
-      this.copyOutputLabel = "Copy";
+      this.copied = false;
     },
     copyOutput() {
       navigator.clipboard.writeText(this.output);
-      this.copyOutputLabel = "Copied!";
-      setTimeout(() => { this.copyOutputLabel = "Copy"; }, 2000);
+      this.copied = true;
+      setTimeout(() => { this.copied = false; }, 2000);
     },
     selectedWordSizeChanged() {},
     selectedEndiannessChanged() {},
@@ -201,13 +212,13 @@ export default {
       if (out) {
         this.output = out;
       } else {
-        this.errorMessage = "Assembly failed. Check your input and settings and try again.";
+        this.errorMessage = this.$t('assembler.errors.assemblyFailed');
       }
     },
     _runDisassemble() {
       this.errorMessage = "";
       if (typeof this.assembler._disassemble !== 'function') {
-        this.errorMessage = "Disassembly is not available in this build.";
+        this.errorMessage = this.$t('assembler.errors.disassemblyUnavailable');
         return;
       }
       const inputBuffer  = this.assembler._malloc(this.input.length + 1);
@@ -231,7 +242,7 @@ export default {
       if (out) {
         this.output = out;
       } else {
-        this.errorMessage = "Disassembly failed. Check your hex bytes, ISA, and settings.";
+        this.errorMessage = this.$t('assembler.errors.disassemblyFailed');
       }
     }
   }
