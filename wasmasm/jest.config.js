@@ -5,7 +5,7 @@ module.exports = {
   testMatch: ['<rootDir>/tests/unit/**/*.spec.js'],
 
   transform: {
-    // Vue SFC → JS (requires @vue/vue3-jest for Vue 3 + Jest 27)
+    // Vue SFC → JS (requires @vue/vue3-jest for Vue 3 + Jest 29)
     '^.+\\.vue$': '@vue/vue3-jest',
     // JS/JSX → CommonJS via the project's babel.config.js
     '^.+\\.js$': 'babel-jest',
