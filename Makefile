@@ -56,6 +56,7 @@ $(KEYSTONE_LIB):
 	cd $(KEYSTONE_DIR)/build && emcmake cmake .. \
 		-DCMAKE_BUILD_TYPE=Release \
 		-DBUILD_SHARED_LIBS=OFF \
+		-DBUILD_LIBS_ONLY=ON \
 		-DLLVM_TARGETS_TO_BUILD="all" \
 		-G "Unix Makefiles"
 	emmake $(MAKE) -C $(KEYSTONE_DIR)/build -j$(shell nproc 2>/dev/null || echo 4)
@@ -69,7 +70,8 @@ $(CAPSTONE_LIB):
 	cd $(CAPSTONE_DIR)/build && emcmake cmake .. \
 		-DCMAKE_BUILD_TYPE=Release \
 		-DBUILD_SHARED_LIBS=OFF \
-		-DCAPSTONE_BUILD_TESTS=OFF \
+		-DCAPSTONE_BUILD_LEGACY_TESTS=OFF \
+		-DCAPSTONE_BUILD_CSTEST=OFF \
 		-DCAPSTONE_BUILD_CSTOOL=OFF \
 		-G "Unix Makefiles"
 	emmake $(MAKE) -C $(CAPSTONE_DIR)/build -j$(shell nproc 2>/dev/null || echo 4)
@@ -96,6 +98,7 @@ $(KEYSTONE_NATIVE_LIB):
 	cd $(KEYSTONE_DIR)/build-native && cmake .. \
 		-DCMAKE_BUILD_TYPE=Release \
 		-DBUILD_SHARED_LIBS=OFF \
+		-DBUILD_LIBS_ONLY=ON \
 		-DLLVM_TARGETS_TO_BUILD="all" \
 		-G "Unix Makefiles"
 	$(MAKE) -C $(KEYSTONE_DIR)/build-native -j$(shell nproc 2>/dev/null || echo 4)
@@ -107,7 +110,8 @@ $(CAPSTONE_NATIVE_LIB):
 	cd $(CAPSTONE_DIR)/build-native && cmake .. \
 		-DCMAKE_BUILD_TYPE=Release \
 		-DBUILD_SHARED_LIBS=OFF \
-		-DCAPSTONE_BUILD_TESTS=OFF \
+		-DCAPSTONE_BUILD_LEGACY_TESTS=OFF \
+		-DCAPSTONE_BUILD_CSTEST=OFF \
 		-DCAPSTONE_BUILD_CSTOOL=OFF \
 		-G "Unix Makefiles"
 	$(MAKE) -C $(CAPSTONE_DIR)/build-native -j$(shell nproc 2>/dev/null || echo 4)

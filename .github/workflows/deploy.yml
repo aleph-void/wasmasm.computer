@@ -55,6 +55,7 @@ jobs:
           emcmake cmake .. \
             -DCMAKE_BUILD_TYPE=Release \
             -DBUILD_SHARED_LIBS=OFF \
+            -DBUILD_LIBS_ONLY=ON \
             -DLLVM_TARGETS_TO_BUILD="all" \
             -G "Unix Makefiles"
           emmake make -j$(nproc)
@@ -80,7 +81,8 @@ jobs:
           emcmake cmake .. \
             -DCMAKE_BUILD_TYPE=Release \
             -DBUILD_SHARED_LIBS=OFF \
-            -DCAPSTONE_BUILD_TESTS=OFF \
+            -DCAPSTONE_BUILD_LEGACY_TESTS=OFF \
+            -DCAPSTONE_BUILD_CSTEST=OFF \
             -DCAPSTONE_BUILD_CSTOOL=OFF \
             -G "Unix Makefiles"
           emmake make -j$(nproc)

@@ -36,6 +36,7 @@ if [ ! -f "$KEYSTONE_LIB" ]; then
     cd third_party/keystone/build
     emcmake cmake .. -DCMAKE_BUILD_TYPE=Release \
              -DBUILD_SHARED_LIBS=OFF \
+             -DBUILD_LIBS_ONLY=ON \
              -DLLVM_TARGETS_TO_BUILD="all" \
              -G "Unix Makefiles"
     emmake make -j"$(nproc 2>/dev/null || echo 4)"
@@ -60,7 +61,8 @@ if [ ! -f "$CAPSTONE_LIB" ]; then
     cd third_party/capstone/build
     emcmake cmake .. -DCMAKE_BUILD_TYPE=Release \
              -DBUILD_SHARED_LIBS=OFF \
-             -DCAPSTONE_BUILD_TESTS=OFF \
+             -DCAPSTONE_BUILD_LEGACY_TESTS=OFF \
+             -DCAPSTONE_BUILD_CSTEST=OFF \
              -DCAPSTONE_BUILD_CSTOOL=OFF \
              -G "Unix Makefiles"
     emmake make -j"$(nproc 2>/dev/null || echo 4)"
