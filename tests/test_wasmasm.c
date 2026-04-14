@@ -1,16 +1,12 @@
 #include <stdio.h>
 #include <string.h>
+#include "../wasmasm.h"
 
 /*
  * assemble() and disassemble() are defined in wasmasm.c, compiled alongside
  * this file. Expected byte values come from keystone's own regression suite:
  * keystone/suite/regress/test_all_archs.py
  */
-int assemble(char *input, int input_size, char *isa, int endianness,
-             int word_size, char *output);
-
-int disassemble(char *input, int input_size, char *isa, int endianness,
-                int word_size, char *output);
 
 #define OUTPUT_SIZE 1024
 
