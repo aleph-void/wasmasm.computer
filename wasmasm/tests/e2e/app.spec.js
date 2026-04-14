@@ -503,6 +503,107 @@ test.describe('URL parameter loading', () => {
   })
 })
 
+// ── i18n / language selector ──────────────────────────────────────────────────
+
+test.describe('i18n / language selector', () => {
+  test.beforeEach(async ({ page }) => {
+    // Clear any previously stored locale so tests start from English.
+    await page.goto('/')
+    await page.evaluate(() => localStorage.removeItem('wasmasm_locale'))
+    await page.goto('/')
+    await waitForWasm(page)
+  })
+
+  test('language selector is visible in the nav', async ({ page }) => {
+    await expect(page.locator('select.locale-select')).toBeVisible()
+  })
+
+  test('language selector contains all 10 supported locales', async ({ page }) => {
+    const texts = await page.locator('select.locale-select option').allTextContents()
+    expect(texts).toEqual(expect.arrayContaining([
+      'English',
+      '简体中文',
+      'हिन्दी',
+      'Español',
+      'Français',
+      'العربية',
+      'বাংলা',
+      'Português',
+      'Русский',
+      'اردو',
+    ]))
+    expect(texts).toHaveLength(10)
+  })
+
+  test('selector defaults to English on first visit', async ({ page }) => {
+    await expect(page.locator('select.locale-select')).toHaveValue('en')
+  })
+
+  test('switching to French updates the nav subtitle', async ({ page }) => {
+    await page.selectOption('select.locale-select', 'fr')
+    await expect(page.locator('.nav-tag')).toHaveText('Assembleur WebAssembly')
+  })
+
+  test('switching to French updates the action button to "Assembler"', async ({ page }) => {
+    await page.selectOption('select.locale-select', 'fr')
+    await expect(page.locator('button.btn-primary')).toHaveText('Assembler')
+  })
+
+  test('switching to French updates mode toggle buttons', async ({ page }) => {
+    await page.selectOption('select.locale-select', 'fr')
+    await expect(page.locator('button.mode-btn', { hasText: 'Assembler' })).toBeVisible()
+    await expect(page.locator('button.mode-btn', { hasText: 'Désassembler' })).toBeVisible()
+  })
+
+  test('switching to Spanish updates the action button to "Ensamblar"', async ({ page }) => {
+    await page.selectOption('select.locale-select', 'es')
+    await expect(page.locator('button.btn-primary')).toHaveText('Ensamblar')
+  })
+
+  test('switching to Spanish updates mode toggle labels', async ({ page }) => {
+    await page.selectOption('select.locale-select', 'es')
+    await expect(page.locator('button.mode-btn', { hasText: 'Ensamblar' })).toBeVisible()
+    await expect(page.locator('button.mode-btn', { hasText: 'Desensamblar' })).toBeVisible()
+  })
+
+  test('switching to Chinese updates the action button to "汇编"', async ({ page }) => {
+    await page.selectOption('select.locale-select', 'zh-CN')
+    await expect(page.locator('button.btn-primary')).toHaveText('汇编')
+  })
+
+  test('selected locale is saved to localStorage', async ({ page }) => {
+    await page.selectOption('select.locale-select', 'fr')
+    const stored = await page.evaluate(() => localStorage.getItem('wasmasm_locale'))
+    expect(stored).toBe('fr')
+  })
+
+  test('locale stored in localStorage is restored on page reload', async ({ page }) => {
+    await page.selectOption('select.locale-select', 'fr')
+    await page.reload()
+    await waitForWasm(page)
+    await expect(page.locator('select.locale-select')).toHaveValue('fr')
+    await expect(page.locator('button.btn-primary')).toHaveText('Assembler')
+  })
+
+  test('assembler still works correctly after switching locale', async ({ page }) => {
+    await page.selectOption('select.locale-select', 'fr')
+    const output = await assemble(page, {
+      input: 'add eax, ecx',
+      isa: 'x86',
+      wordSize: '32',
+      endianness: 'small',
+    })
+    expect(output.trim()).toBe('01 c8')
+  })
+
+  test('copy button label shows translated text after clicking in French locale', async ({ page }) => {
+    await page.selectOption('select.locale-select', 'fr')
+    await assemble(page, { input: 'nop', isa: 'x86', wordSize: '32', endianness: 'small' })
+    await page.click('button.btn-copy')
+    await expect(page.locator('button.btn-copy')).toHaveText('Copié')
+  })
+})
+
 // ── copy link ─────────────────────────────────────────────────────────────────
 
 test.describe('copy link', () => {

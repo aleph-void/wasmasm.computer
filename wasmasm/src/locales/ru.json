@@ -1,0 +1,78 @@
+{
+  "nav": {
+    "subtitle": "Ассемблер WebAssembly",
+    "links": {
+      "keystone": "Keystone",
+      "blog": "StarkeBlog"
+    }
+  },
+  "footer": {
+    "text": "Создано с использованием {keystone}, скомпилированного в WebAssembly, автор — {alephvoid}",
+    "keystoneName": "Keystone Engine",
+    "alephvoidName": "Aleph Void LLC"
+  },
+  "assembler": {
+    "sectionLabel": "// Ассемблер",
+    "title": "Браузерный CPU-ассемблер",
+    "description": "Вставьте инструкции ассемблера или шестнадцатеричные байты, выберите целевую архитектуру и нажмите кнопку действия. Работает на {keystone} (assemble) и {capstone} (disassemble), скомпилированных в WebAssembly.",
+    "mode": {
+      "ariaLabel": "Режим",
+      "assemble": "Собрать",
+      "disassemble": "Дизассемблировать"
+    },
+    "architecture": {
+      "label": "Архитектура",
+      "placeholder": "Выберите ISA"
+    },
+    "wordSize": {
+      "label": "Разрядность",
+      "placeholder": "Выберите размер",
+      "16": "16-бит",
+      "32": "32-бит",
+      "64": "64-бит"
+    },
+    "endianness": {
+      "label": "Порядок байтов",
+      "placeholder": "Выберите порядок",
+      "little": "Младший порядок байтов",
+      "big": "Старший порядок байтов"
+    },
+    "input": {
+      "labelAssemble": "// Ввод (ассемблер)",
+      "labelDisassemble": "// Ввод (шестнадцатеричные байты)",
+      "placeholderAssemble": "mov eax, edx",
+      "placeholderDisassemble": "89 d0"
+    },
+    "output": {
+      "labelAssemble": "// Вывод (шестнадцатеричные байты)",
+      "labelDisassemble": "// Вывод (ассемблер)",
+      "placeholderAssemble": "собранные байты появятся здесь",
+      "placeholderDisassemble": "дизассемблированные инструкции появятся здесь",
+      "copy": "Копировать",
+      "copied": "Скопировано!"
+    },
+    "actions": {
+      "assemble": "Собрать",
+      "disassemble": "Дизассемблировать",
+      "copyLink": "Копировать ссылку"
+    },
+    "errors": {
+      "assemblyFailed": "Сборка не удалась. Проверьте ввод и настройки и попробуйте снова.",
+      "disassemblyUnavailable": "Дизассемблирование недоступно в этой сборке.",
+      "disassemblyFailed": "Дизассемблирование не удалось. Проверьте шестнадцатеричные байты, ISA и настройки."
+    }
+  },
+  "language": {
+    "label": "Язык",
+    "en": "English",
+    "zh-CN": "简体中文",
+    "hi": "हिन्दी",
+    "es": "Español",
+    "fr": "Français",
+    "ar": "العربية",
+    "bn": "বাংলা",
+    "pt": "Português",
+    "ru": "Русский",
+    "ur": "اردو"
+  }
+}

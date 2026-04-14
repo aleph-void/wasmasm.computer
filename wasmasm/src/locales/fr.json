@@ -1,0 +1,78 @@
+{
+  "nav": {
+    "subtitle": "Assembleur WebAssembly",
+    "links": {
+      "keystone": "Keystone",
+      "blog": "StarkeBlog"
+    }
+  },
+  "footer": {
+    "text": "Construit avec {keystone} compilé en WebAssembly, créé par {alephvoid}",
+    "keystoneName": "Keystone Engine",
+    "alephvoidName": "Aleph Void LLC"
+  },
+  "assembler": {
+    "sectionLabel": "// Assembleur",
+    "title": "Assembleur CPU dans le navigateur",
+    "description": "Collez des instructions assembleur ou des octets hexadécimaux, choisissez votre architecture cible, puis cliquez sur le bouton d'action. Propulsé par {keystone} (assemble) et {capstone} (disassemble), compilés en WebAssembly.",
+    "mode": {
+      "ariaLabel": "Mode",
+      "assemble": "Assembler",
+      "disassemble": "Désassembler"
+    },
+    "architecture": {
+      "label": "Architecture",
+      "placeholder": "Sélectionnez l'ISA"
+    },
+    "wordSize": {
+      "label": "Taille de mot",
+      "placeholder": "Sélectionnez la taille",
+      "16": "16 bits",
+      "32": "32 bits",
+      "64": "64 bits"
+    },
+    "endianness": {
+      "label": "Boutisme",
+      "placeholder": "Sélectionnez le boutisme",
+      "little": "Little-endian",
+      "big": "Big-endian"
+    },
+    "input": {
+      "labelAssemble": "// Entrée (assembleur)",
+      "labelDisassemble": "// Entrée (octets hexadécimaux)",
+      "placeholderAssemble": "mov eax, edx",
+      "placeholderDisassemble": "89 d0"
+    },
+    "output": {
+      "labelAssemble": "// Sortie (octets hexadécimaux)",
+      "labelDisassemble": "// Sortie (assembleur)",
+      "placeholderAssemble": "les octets assemblés apparaîtront ici",
+      "placeholderDisassemble": "les instructions désassemblées apparaîtront ici",
+      "copy": "Copier",
+      "copied": "Copié"
+    },
+    "actions": {
+      "assemble": "Assembler",
+      "disassemble": "Désassembler",
+      "copyLink": "Copier le lien"
+    },
+    "errors": {
+      "assemblyFailed": "L'assemblage a échoué. Vérifiez votre saisie et vos paramètres, puis réessayez.",
+      "disassemblyUnavailable": "Le désassemblage n'est pas disponible dans cette version.",
+      "disassemblyFailed": "Le désassemblage a échoué. Vérifiez vos octets hexadécimaux, l'ISA et les paramètres."
+    }
+  },
+  "language": {
+    "label": "Langue",
+    "en": "English",
+    "zh-CN": "简体中文",
+    "hi": "हिन्दी",
+    "es": "Español",
+    "fr": "Français",
+    "ar": "العربية",
+    "bn": "বাংলা",
+    "pt": "Português",
+    "ru": "Русский",
+    "ur": "اردو"
+  }
+}

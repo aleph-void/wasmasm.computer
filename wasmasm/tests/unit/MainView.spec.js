@@ -1,9 +1,27 @@
 import { mount, flushPromises } from '@vue/test-utils'
 import { toRaw } from 'vue'
+import { createI18n } from 'vue-i18n'
 import MainView from '../../src/components/MainView.vue'
 // mockAssembler is the same object that the component will receive from the
 // mocked factory — we can inspect it and control its return values here.
 import { mockAssembler } from './__mocks__/assemblyModuleMock.js'
+import en from '../../src/locales/en.json'
+import fr from '../../src/locales/fr.json'
+import es from '../../src/locales/es.json'
+import zhCN from '../../src/locales/zh-CN.json'
+
+function makeI18n() {
+  return createI18n({ legacy: true, locale: 'en', fallbackLocale: 'en', messages: { en } })
+}
+
+function makeI18nWithLocale(locale) {
+  return createI18n({
+    legacy: true,
+    locale,
+    fallbackLocale: 'en',
+    messages: { en, fr, es, 'zh-CN': zhCN },
+  })
+}
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
@@ -28,6 +46,19 @@ async function mountComponent(locationSearch = '') {
   const wrapper = mount(MainView, {
     global: {
       mocks: { $route: { query: {} } },
+      plugins: [makeI18n()],
+    },
+  })
+  await flushPromises()
+  return wrapper
+}
+
+async function mountWithLocale(locale) {
+  setLocation('')
+  const wrapper = mount(MainView, {
+    global: {
+      mocks: { $route: { query: {} } },
+      plugins: [makeI18nWithLocale(locale)],
     },
   })
   await flushPromises()
@@ -183,14 +214,16 @@ describe('mode toggle', () => {
     expect(wrapper.find('button.btn-primary').text()).toBe('Disassemble')
   })
 
-  it('clears output and error when switching modes', async () => {
+  it('clears output, error, and copied flag when switching modes', async () => {
     const wrapper = await mountComponent()
     wrapper.vm.output = '01 c8 '
     wrapper.vm.errorMessage = 'some error'
+    wrapper.vm.copied = true
     const disBtn = wrapper.findAll('button.mode-btn').find(b => b.text() === 'Disassemble')
     await disBtn.trigger('click')
     expect(wrapper.vm.output).toBe('')
     expect(wrapper.vm.errorMessage).toBe('')
+    expect(wrapper.vm.copied).toBe(false)
   })
 })
 
@@ -436,9 +469,10 @@ describe('copy output button', () => {
     wrapper.vm.output = '90 '
     await wrapper.vm.$nextTick()
     await wrapper.find('button.btn-copy').trigger('click')
-    expect(wrapper.vm.copyOutputLabel).toBe('Copied!')
+    // copied flag drives the computed copyOutputLabel
+    expect(wrapper.vm.copied).toBe(true)
     jest.advanceTimersByTime(2000)
-    expect(wrapper.vm.copyOutputLabel).toBe('Copy')
+    expect(wrapper.vm.copied).toBe(false)
     jest.useRealTimers()
   })
 
@@ -449,7 +483,7 @@ describe('copy output button', () => {
     await wrapper.vm.$nextTick()
     await wrapper.find('button.btn-copy').trigger('click')
     jest.advanceTimersByTime(1999)
-    expect(wrapper.vm.copyOutputLabel).toBe('Copied!')
+    expect(wrapper.vm.copied).toBe(true)
     jest.useRealTimers()
   })
 })
@@ -510,6 +544,89 @@ describe('placeholders', () => {
     wrapper.vm.mode = 'disassemble'
     await wrapper.vm.$nextTick()
     expect(wrapper.find('#output').attributes('placeholder')).toBe('disassembled instructions appear here')
+  })
+})
+
+// ── i18n / locale switching ───────────────────────────────────────────────────
+
+describe('i18n / locale switching', () => {
+  it('renders the action button in French ("Assembler") when locale is fr', async () => {
+    const wrapper = await mountWithLocale('fr')
+    expect(wrapper.find('button.btn-primary').text()).toBe('Assembler')
+  })
+
+  it('renders mode toggle buttons in French when locale is fr', async () => {
+    const wrapper = await mountWithLocale('fr')
+    const labels = wrapper.findAll('button.mode-btn').map(b => b.text())
+    expect(labels).toContain('Assembler')
+    expect(labels).toContain('Désassembler')
+  })
+
+  it('copyOutputLabel computed returns the French word "Copier" when locale is fr', async () => {
+    const wrapper = await mountWithLocale('fr')
+    expect(wrapper.vm.copyOutputLabel).toBe('Copier')
+  })
+
+  it('copyOutputLabel reflects "Copied" in French ("Copié") after copy click', async () => {
+    const wrapper = await mountWithLocale('fr')
+    wrapper.vm.output = '90 '
+    await wrapper.vm.$nextTick()
+    await wrapper.find('button.btn-copy').trigger('click')
+    expect(wrapper.find('button.btn-copy').text()).toBe('Copié')
+  })
+
+  it('inputPlaceholder is the same assembly snippet regardless of locale', async () => {
+    const wrapper = await mountWithLocale('fr')
+    expect(wrapper.find('#input').attributes('placeholder')).toBe('mov eax, edx')
+  })
+
+  it('renders the action button in Spanish ("Ensamblar") when locale is es', async () => {
+    const wrapper = await mountWithLocale('es')
+    expect(wrapper.find('button.btn-primary').text()).toBe('Ensamblar')
+  })
+
+  it('renders the action button in Chinese ("汇编") when locale is zh-CN', async () => {
+    const wrapper = await mountWithLocale('zh-CN')
+    expect(wrapper.find('button.btn-primary').text()).toBe('汇编')
+  })
+
+  it('changing the i18n locale reactively updates copyOutputLabel', async () => {
+    const i18n = makeI18nWithLocale('en')
+    setLocation('')
+    const wrapper = mount(MainView, {
+      global: {
+        mocks: { $route: { query: {} } },
+        plugins: [i18n],
+      },
+    })
+    await flushPromises()
+    expect(wrapper.vm.copyOutputLabel).toBe('Copy')
+    i18n.global.locale = 'fr'
+    await wrapper.vm.$nextTick()
+    expect(wrapper.vm.copyOutputLabel).toBe('Copier')
+  })
+
+  it('error message is in French when assembly fails with French locale', async () => {
+    const wrapper = await mountWithLocale('fr')
+    wrapper.vm.input = '@@invalid@@'
+    wrapper.vm.selectedISA = 'x86'
+    wrapper.vm.selectedWordSize = '32'
+    wrapper.vm.selectedEndianness = 'small'
+    await wrapper.find('button.btn-primary').trigger('click')
+    expect(wrapper.vm.errorMessage).toBe(fr.assembler.errors.assemblyFailed)
+  })
+
+  it('disassembly error message is in Spanish when locale is es', async () => {
+    const wrapper = await mountWithLocale('es')
+    const disBtn = wrapper.findAll('button.mode-btn').find(b => b.text() === 'Desensamblar')
+    await disBtn.trigger('click')
+    mockAssembler.UTF8ToString.mockReturnValue('')
+    wrapper.vm.input = 'zz zz'
+    wrapper.vm.selectedISA = 'x86'
+    wrapper.vm.selectedWordSize = '32'
+    wrapper.vm.selectedEndianness = 'small'
+    await wrapper.find('button.btn-primary').trigger('click')
+    expect(wrapper.vm.errorMessage).toBe(es.assembler.errors.disassemblyFailed)
   })
 })
 

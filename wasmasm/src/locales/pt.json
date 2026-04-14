@@ -1,0 +1,78 @@
+{
+  "nav": {
+    "subtitle": "Montador WebAssembly",
+    "links": {
+      "keystone": "Keystone",
+      "blog": "StarkeBlog"
+    }
+  },
+  "footer": {
+    "text": "Construído com {keystone} compilado para WebAssembly, criado por {alephvoid}",
+    "keystoneName": "Keystone Engine",
+    "alephvoidName": "Aleph Void LLC"
+  },
+  "assembler": {
+    "sectionLabel": "// Montador",
+    "title": "Montador de CPU baseado no navegador",
+    "description": "Cole instruções de assembly ou bytes hexadecimais, escolha sua arquitetura de destino e clique no botão de ação. Alimentado por {keystone} (assemble) e {capstone} (disassemble) compilados para WebAssembly.",
+    "mode": {
+      "ariaLabel": "Modo",
+      "assemble": "Montar",
+      "disassemble": "Desmontar"
+    },
+    "architecture": {
+      "label": "Arquitetura",
+      "placeholder": "Selecione a ISA"
+    },
+    "wordSize": {
+      "label": "Tamanho da palavra",
+      "placeholder": "Selecione o tamanho",
+      "16": "16 bits",
+      "32": "32 bits",
+      "64": "64 bits"
+    },
+    "endianness": {
+      "label": "Ordem de bytes",
+      "placeholder": "Selecione a ordem",
+      "little": "Little-endian",
+      "big": "Big-endian"
+    },
+    "input": {
+      "labelAssemble": "// Entrada (assembly)",
+      "labelDisassemble": "// Entrada (bytes hexadecimais)",
+      "placeholderAssemble": "mov eax, edx",
+      "placeholderDisassemble": "89 d0"
+    },
+    "output": {
+      "labelAssemble": "// Saída (bytes hexadecimais)",
+      "labelDisassemble": "// Saída (assembly)",
+      "placeholderAssemble": "os bytes montados aparecerão aqui",
+      "placeholderDisassemble": "as instruções desmontadas aparecerão aqui",
+      "copy": "Copiar",
+      "copied": "Copiado!"
+    },
+    "actions": {
+      "assemble": "Montar",
+      "disassemble": "Desmontar",
+      "copyLink": "Copiar link"
+    },
+    "errors": {
+      "assemblyFailed": "A montagem falhou. Verifique sua entrada e configurações e tente novamente.",
+      "disassemblyUnavailable": "A desmontagem não está disponível nesta compilação.",
+      "disassemblyFailed": "A desmontagem falhou. Verifique seus bytes hexadecimais, ISA e configurações."
+    }
+  },
+  "language": {
+    "label": "Idioma",
+    "en": "English",
+    "zh-CN": "简体中文",
+    "hi": "हिन्दी",
+    "es": "Español",
+    "fr": "Français",
+    "ar": "العربية",
+    "bn": "বাংলা",
+    "pt": "Português",
+    "ru": "Русский",
+    "ur": "اردو"
+  }
+}

@@ -1,0 +1,78 @@
+{
+  "nav": {
+    "subtitle": "WebAssembly असेंबलर",
+    "links": {
+      "keystone": "Keystone",
+      "blog": "StarkeBlog"
+    }
+  },
+  "footer": {
+    "text": "{keystone} को WebAssembly में संकलित करके बनाया गया, {alephvoid} द्वारा निर्मित",
+    "keystoneName": "Keystone Engine",
+    "alephvoidName": "Aleph Void LLC"
+  },
+  "assembler": {
+    "sectionLabel": "// असेंबलर",
+    "title": "ब्राउज़र-आधारित CPU असेंबलर",
+    "description": "असेंबली निर्देश या हेक्स बाइट्स पेस्ट करें, अपनी लक्ष्य आर्किटेक्चर चुनें, और कार्रवाई बटन पर क्लिक करें। WebAssembly में संकलित {keystone} (assemble) और {capstone} (disassemble) द्वारा संचालित।",
+    "mode": {
+      "ariaLabel": "मोड",
+      "assemble": "असेंबल",
+      "disassemble": "डिसअसेंबल"
+    },
+    "architecture": {
+      "label": "आर्किटेक्चर",
+      "placeholder": "ISA चुनें"
+    },
+    "wordSize": {
+      "label": "वर्ड साइज",
+      "placeholder": "आकार चुनें",
+      "16": "16-बिट",
+      "32": "32-बिट",
+      "64": "64-बिट"
+    },
+    "endianness": {
+      "label": "एंडियननेस",
+      "placeholder": "एंडियन चुनें",
+      "little": "लिटल-एंडियन",
+      "big": "बिग-एंडियन"
+    },
+    "input": {
+      "labelAssemble": "// इनपुट (असेंबली)",
+      "labelDisassemble": "// इनपुट (हेक्स बाइट्स)",
+      "placeholderAssemble": "mov eax, edx",
+      "placeholderDisassemble": "89 d0"
+    },
+    "output": {
+      "labelAssemble": "// आउटपुट (हेक्स बाइट्स)",
+      "labelDisassemble": "// आउटपुट (असेंबली)",
+      "placeholderAssemble": "असेंबल किए गए बाइट्स यहाँ दिखाई देंगे",
+      "placeholderDisassemble": "डिसअसेंबल किए गए निर्देश यहाँ दिखाई देंगे",
+      "copy": "कॉपी करें",
+      "copied": "कॉपी हो गया!"
+    },
+    "actions": {
+      "assemble": "असेंबल",
+      "disassemble": "डिसअसेंबल",
+      "copyLink": "लिंक कॉपी करें"
+    },
+    "errors": {
+      "assemblyFailed": "असेंबली विफल रही। अपना इनपुट और सेटिंग्स जाँचकर फिर प्रयास करें।",
+      "disassemblyUnavailable": "इस बिल्ड में डिसअसेंबली उपलब्ध नहीं है।",
+      "disassemblyFailed": "डिसअसेंबली विफल रही। अपने हेक्स बाइट्स, ISA और सेटिंग्स जाँचें।"
+    }
+  },
+  "language": {
+    "label": "भाषा",
+    "en": "English",
+    "zh-CN": "简体中文",
+    "hi": "हिन्दी",
+    "es": "Español",
+    "fr": "Français",
+    "ar": "العربية",
+    "bn": "বাংলা",
+    "pt": "Português",
+    "ru": "Русский",
+    "ur": "اردو"
+  }
+}

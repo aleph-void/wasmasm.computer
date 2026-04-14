@@ -1,0 +1,78 @@
+{
+  "nav": {
+    "subtitle": "WebAssembly 汇编器",
+    "links": {
+      "keystone": "Keystone",
+      "blog": "StarkeBlog"
+    }
+  },
+  "footer": {
+    "text": "基于编译为 WebAssembly 的 {keystone} 构建，由 {alephvoid} 创建",
+    "keystoneName": "Keystone Engine",
+    "alephvoidName": "Aleph Void LLC"
+  },
+  "assembler": {
+    "sectionLabel": "// 汇编器",
+    "title": "基于浏览器的 CPU 汇编器",
+    "description": "粘贴汇编指令或十六进制字节，选择目标架构，然后点击操作按钮。由编译为 WebAssembly 的 {keystone}（汇编）和 {capstone}（反汇编）驱动。",
+    "mode": {
+      "ariaLabel": "模式",
+      "assemble": "汇编",
+      "disassemble": "反汇编"
+    },
+    "architecture": {
+      "label": "架构",
+      "placeholder": "选择 ISA"
+    },
+    "wordSize": {
+      "label": "字长",
+      "placeholder": "选择位数",
+      "16": "16 位",
+      "32": "32 位",
+      "64": "64 位"
+    },
+    "endianness": {
+      "label": "字节序",
+      "placeholder": "选择字节序",
+      "little": "小端",
+      "big": "大端"
+    },
+    "input": {
+      "labelAssemble": "// 输入（汇编）",
+      "labelDisassemble": "// 输入（十六进制字节）",
+      "placeholderAssemble": "mov eax, edx",
+      "placeholderDisassemble": "89 d0"
+    },
+    "output": {
+      "labelAssemble": "// 输出（十六进制字节）",
+      "labelDisassemble": "// 输出（汇编）",
+      "placeholderAssemble": "汇编后的字节将显示在此处",
+      "placeholderDisassemble": "反汇编后的指令将显示在此处",
+      "copy": "复制",
+      "copied": "已复制！"
+    },
+    "actions": {
+      "assemble": "汇编",
+      "disassemble": "反汇编",
+      "copyLink": "复制链接"
+    },
+    "errors": {
+      "assemblyFailed": "汇编失败。请检查输入和设置后重试。",
+      "disassemblyUnavailable": "此构建版本不提供反汇编功能。",
+      "disassemblyFailed": "反汇编失败。请检查十六进制字节、ISA 和相关设置。"
+    }
+  },
+  "language": {
+    "label": "语言",
+    "en": "English",
+    "zh-CN": "简体中文",
+    "hi": "हिन्दी",
+    "es": "Español",
+    "fr": "Français",
+    "ar": "العربية",
+    "bn": "বাংলা",
+    "pt": "Português",
+    "ru": "Русский",
+    "ur": "اردو"
+  }
+}
