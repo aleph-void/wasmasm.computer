@@ -93,3 +93,101 @@ jobs:
 
       - name: Run Vue unit tests
         run: npm run test:unit --prefix wasmasm
+
+  # ── E2E tests (Playwright) ───────────────────────────────────────────────────
+  # Requires a full WASM build, so keystone and capstone are built with
+  # Emscripten here (cached by submodule hash to keep PR runs fast).
+  e2e-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository (with submodules)
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install build dependencies
+        run: sudo apt-get update && sudo apt-get install -y cmake build-essential
+
+      - name: Set up Emscripten
+        uses: mymindstorm/setup-emsdk@v14
+
+      - name: Get keystone submodule commit hash
+        id: keystone-ref
+        run: echo "hash=$(git -C third_party/keystone rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache keystone Emscripten build
+        id: cache-keystone
+        uses: actions/cache@v4
+        with:
+          path: third_party/keystone/build
+          key: keystone-emscripten-${{ runner.os }}-${{ steps.keystone-ref.outputs.hash }}
+
+      - name: Build keystone (Emscripten)
+        if: steps.cache-keystone.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p third_party/keystone/build
+          cd third_party/keystone/build
+          emcmake cmake .. \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DBUILD_SHARED_LIBS=OFF \
+            -DBUILD_LIBS_ONLY=ON \
+            -DLLVM_TARGETS_TO_BUILD="all" \
+            -G "Unix Makefiles"
+          emmake make -j$(nproc)
+
+      - name: Get capstone submodule commit hash
+        id: capstone-ref
+        run: echo "hash=$(git -C third_party/capstone rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache capstone Emscripten build
+        id: cache-capstone
+        uses: actions/cache@v4
+        with:
+          path: third_party/capstone/build
+          key: capstone-emscripten-${{ runner.os }}-${{ steps.capstone-ref.outputs.hash }}
+
+      - name: Build capstone (Emscripten)
+        if: steps.cache-capstone.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p third_party/capstone/build
+          cd third_party/capstone/build
+          emcmake cmake .. \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DBUILD_SHARED_LIBS=OFF \
+            -DCAPSTONE_BUILD_LEGACY_TESTS=OFF \
+            -DCAPSTONE_BUILD_CSTEST=OFF \
+            -DCAPSTONE_BUILD_CSTOOL=OFF \
+            -G "Unix Makefiles"
+          emmake make -j$(nproc)
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: wasmasm/package-lock.json
+
+      - name: Install npm dependencies
+        run: npm ci --prefix wasmasm
+
+      - name: Build WASM and Vue app
+        run: make build
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+        working-directory: wasmasm
+
+      - name: Run E2E tests
+        run: npm run test:e2e
+        working-directory: wasmasm
+        env:
+          CI: true
+
+      - name: Upload Playwright report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: wasmasm/playwright-report/
+          retention-days: 7
