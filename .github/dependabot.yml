@@ -1,0 +1,31 @@
+version: 2
+
+updates:
+  # JavaScript / npm (wasmasm frontend)
+  - package-ecosystem: npm
+    directory: /wasmasm
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 10
+    groups:
+      # Batch all Playwright updates into one PR
+      playwright:
+        patterns:
+          - "@playwright/*"
+          - "playwright*"
+      # Batch all Vue / vue-i18n / vue-test-utils updates into one PR
+      vue:
+        patterns:
+          - "vue"
+          - "@vue/*"
+          - "vue-i18n"
+          - "vue-router"
+
+  # GitHub Actions
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
