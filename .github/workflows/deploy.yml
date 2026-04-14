@@ -30,7 +30,7 @@ jobs:
       # ── Emscripten (must come before keystone/capstone builds) ───────────────
 
       - name: Set up Emscripten
-        uses: mymindstorm/setup-emsdk@v14
+        uses: mymindstorm/setup-emsdk@v16
 
       # ── Keystone ─────────────────────────────────────────────────────────────
 
