@@ -3,13 +3,14 @@
     "subtitle": "WebAssembly اسمبلر",
     "links": {
       "keystone": "Keystone",
-      "blog": "StarkeBlog"
+      "capstone": "Capstone"
     }
   },
   "footer": {
-    "text": "{keystone} کو WebAssembly میں کمپائل کر کے بنایا گیا، تخلیق کار {alephvoid}",
+    "text": "{keystone} اور {capstone} کو WebAssembly میں کمپائل کر کے بنایا گیا، تخلیق کار {alephvoid}",
     "keystoneName": "Keystone Engine",
-    "alephvoidName": "Aleph Void LLC"
+    "alephvoidName": "Aleph Void LLC",
+    "capstoneName": "Capstone Engine"
   },
   "assembler": {
     "sectionLabel": "// اسمبلر",

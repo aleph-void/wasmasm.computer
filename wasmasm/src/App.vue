@@ -8,7 +8,7 @@
         </div>
         <nav class="nav-links">
           <a href="https://www.keystone-engine.org/" target="_blank" rel="noopener">{{ $t('nav.links.keystone') }}</a>
-          <a href="https://starkeblog.com/" target="_blank" rel="noopener">{{ $t('nav.links.blog') }}</a>
+          <a href="https://www.capstone-engine.org/" target="_blank" rel="noopener">{{ $t('nav.links.capstone') }}</a>
           <select
             class="locale-select"
             :value="currentLocale"
@@ -33,6 +33,9 @@
       <i18n-t keypath="footer.text" tag="p">
         <template #keystone>
           <a href="https://www.keystone-engine.org/" target="_blank" rel="noopener">{{ $t('footer.keystoneName') }}</a>
+        </template>
+        <template #capstone>
+          <a href="https://www.capstone-engine.org/" target="_blank" rel="noopener">{{ $t('footer.capstoneName') }}</a>
         </template>
         <template #alephvoid>
           <a href="https://alephvoid.com/" target="_blank" rel="noopener">{{ $t('footer.alephvoidName') }}</a>
@@ -168,7 +171,7 @@ body {
 }
 
 .locale-select {
-  background: transparent;
+  background: var(--bg-secondary);
   border: 1px solid var(--border);
   border-radius: 4px;
   color: var(--text-secondary);
@@ -187,6 +190,11 @@ body {
   border-color: var(--accent-light);
   color: var(--text-primary);
   outline: none;
+}
+
+.locale-select option {
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
 }
 
 /* Main content */

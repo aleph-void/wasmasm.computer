@@ -3,13 +3,14 @@
     "subtitle": "Ensamblador WebAssembly",
     "links": {
       "keystone": "Keystone",
-      "blog": "StarkeBlog"
+      "capstone": "Capstone"
     }
   },
   "footer": {
-    "text": "Creado con {keystone} compilado a WebAssembly, por {alephvoid}",
+    "text": "Creado con {keystone} y {capstone} compilados a WebAssembly, por {alephvoid}",
     "keystoneName": "Keystone Engine",
-    "alephvoidName": "Aleph Void LLC"
+    "alephvoidName": "Aleph Void LLC",
+    "capstoneName": "Capstone Engine"
   },
   "assembler": {
     "sectionLabel": "// Ensamblador",

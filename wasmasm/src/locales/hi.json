@@ -3,13 +3,14 @@
     "subtitle": "WebAssembly असेंबलर",
     "links": {
       "keystone": "Keystone",
-      "blog": "StarkeBlog"
+      "capstone": "Capstone"
     }
   },
   "footer": {
-    "text": "{keystone} को WebAssembly में संकलित करके बनाया गया, {alephvoid} द्वारा निर्मित",
+    "text": "{keystone} और {capstone} को WebAssembly में संकलित करके बनाया गया, {alephvoid} द्वारा निर्मित",
     "keystoneName": "Keystone Engine",
-    "alephvoidName": "Aleph Void LLC"
+    "alephvoidName": "Aleph Void LLC",
+    "capstoneName": "Capstone Engine"
   },
   "assembler": {
     "sectionLabel": "// असेंबलर",

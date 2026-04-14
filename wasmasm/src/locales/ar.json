@@ -3,13 +3,14 @@
     "subtitle": "مجمّع WebAssembly",
     "links": {
       "keystone": "Keystone",
-      "blog": "StarkeBlog"
+      "capstone": "Capstone"
     }
   },
   "footer": {
-    "text": "مبني باستخدام {keystone} بعد تجميعه إلى WebAssembly، ومن إنشاء {alephvoid}",
+    "text": "مبني باستخدام {keystone} و{capstone} بعد تجميلهما إلى WebAssembly، ومن إنشاء {alephvoid}",
     "keystoneName": "Keystone Engine",
-    "alephvoidName": "Aleph Void LLC"
+    "alephvoidName": "Aleph Void LLC",
+    "capstoneName": "Capstone Engine"
   },
   "assembler": {
     "sectionLabel": "// المجمّع",

@@ -3,13 +3,14 @@
     "subtitle": "Montador WebAssembly",
     "links": {
       "keystone": "Keystone",
-      "blog": "StarkeBlog"
+      "capstone": "Capstone"
     }
   },
   "footer": {
-    "text": "Construído com {keystone} compilado para WebAssembly, criado por {alephvoid}",
+    "text": "Construído com {keystone} e {capstone} compilados para WebAssembly, criado por {alephvoid}",
     "keystoneName": "Keystone Engine",
-    "alephvoidName": "Aleph Void LLC"
+    "alephvoidName": "Aleph Void LLC",
+    "capstoneName": "Capstone Engine"
   },
   "assembler": {
     "sectionLabel": "// Montador",
