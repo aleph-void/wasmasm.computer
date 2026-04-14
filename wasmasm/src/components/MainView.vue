@@ -75,7 +75,16 @@
         </div>
 
         <div class="pane">
-          <p class="section-label">{{ mode === 'assemble' ? '// Output (hex bytes)' : '// Output (assembly)' }}</p>
+          <div class="pane-header">
+            <p class="section-label">{{ mode === 'assemble' ? '// Output (hex bytes)' : '// Output (assembly)' }}</p>
+            <button
+              v-if="output"
+              class="btn-copy"
+              type="button"
+              @click="copyOutput"
+              :title="copyOutputLabel"
+            >{{ copyOutputLabel }}</button>
+          </div>
           <textarea
             id="output"
             class="asm-textarea asm-textarea--output"
@@ -115,7 +124,8 @@ export default {
       selectedWordSize: "",
       selectedEndianness: "",
       assembler: null,
-      errorMessage: ""
+      errorMessage: "",
+      copyOutputLabel: "Copy"
     }
   },
   computed: {
@@ -144,6 +154,12 @@ export default {
       this.mode = m;
       this.output = "";
       this.errorMessage = "";
+      this.copyOutputLabel = "Copy";
+    },
+    copyOutput() {
+      navigator.clipboard.writeText(this.output);
+      this.copyOutputLabel = "Copied!";
+      setTimeout(() => { this.copyOutputLabel = "Copy"; }, 2000);
     },
     selectedWordSizeChanged() {},
     selectedEndiannessChanged() {},
@@ -355,6 +371,36 @@ export default {
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
+}
+
+.pane-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 1.25rem;
+}
+
+.pane-header .section-label {
+  margin-bottom: 0;
+}
+
+.btn-copy {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text-muted);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 0.2rem 0.55rem;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.btn-copy:hover {
+  border-color: var(--accent-light);
+  color: var(--accent-light);
 }
 
 .asm-textarea {
