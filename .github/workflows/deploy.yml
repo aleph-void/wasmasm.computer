@@ -29,6 +29,11 @@ jobs:
       - name: Install build dependencies
         run: sudo apt-get update && sudo apt-get install -y cmake build-essential
 
+      # ── Emscripten (must come before keystone build) ─────────────────────────
+
+      - name: Set up Emscripten
+        uses: mymindstorm/setup-emsdk@v14
+
       # ── Keystone ─────────────────────────────────────────────────────────────
 
       - name: Get keystone submodule commit hash
@@ -53,11 +58,6 @@ jobs:
             -DLLVM_TARGETS_TO_BUILD="all" \
             -G "Unix Makefiles"
           emmake make -j$(nproc)
-
-      # ── Emscripten ───────────────────────────────────────────────────────────
-
-      - name: Set up Emscripten
-        uses: mymindstorm/setup-emsdk@v14
 
       # ── Node / Vue ───────────────────────────────────────────────────────────
 
