@@ -2,6 +2,7 @@
 set -e
 
 KEYSTONE_LIB="third_party/keystone/build/llvm/lib/libkeystone.a"
+CAPSTONE_LIB="third_party/capstone/build/libcapstone.a"
 ASSETS_DIR="wasmasm/src/assets"
 TMP_JS="/tmp/wasmasm.js"
 TMP_WASM="/tmp/wasmasm.wasm"
@@ -25,7 +26,7 @@ check_tool npm    "install npm alongside Node.js"
 # ── Keystone static library ───────────────────────────────────────────────────
 
 if [ ! -f "$KEYSTONE_LIB" ]; then
-    echo ">>> Keystone library not found; building keystone..."
+    echo ">>> Keystone library not found; building keystone with Emscripten..."
     if [ ! -d "third_party/keystone" ]; then
         echo "ERROR: third_party/keystone/ directory is missing" >&2
         echo "  Run: git submodule update --init --recursive" >&2
@@ -33,17 +34,42 @@ if [ ! -f "$KEYSTONE_LIB" ]; then
     fi
     mkdir -p third_party/keystone/build
     cd third_party/keystone/build
-    cmake .. -DCMAKE_BUILD_TYPE=Release \
+    emcmake cmake .. -DCMAKE_BUILD_TYPE=Release \
              -DBUILD_SHARED_LIBS=OFF \
              -DLLVM_TARGETS_TO_BUILD="all" \
              -G "Unix Makefiles"
-    make -j"$(nproc 2>/dev/null || echo 4)"
+    emmake make -j"$(nproc 2>/dev/null || echo 4)"
     cd ../../..
     if [ ! -f "$KEYSTONE_LIB" ]; then
         echo "ERROR: keystone build finished but '$KEYSTONE_LIB' was not produced" >&2
         exit 1
     fi
     echo ">>> Keystone built successfully."
+fi
+
+# ── Capstone static library ───────────────────────────────────────────────────
+
+if [ ! -f "$CAPSTONE_LIB" ]; then
+    echo ">>> Capstone library not found; building capstone with Emscripten..."
+    if [ ! -d "third_party/capstone" ]; then
+        echo "ERROR: third_party/capstone/ directory is missing" >&2
+        echo "  Run: git submodule update --init --recursive" >&2
+        exit 1
+    fi
+    mkdir -p third_party/capstone/build
+    cd third_party/capstone/build
+    emcmake cmake .. -DCMAKE_BUILD_TYPE=Release \
+             -DBUILD_SHARED_LIBS=OFF \
+             -DCAPSTONE_BUILD_TESTS=OFF \
+             -DCAPSTONE_BUILD_CSTOOL=OFF \
+             -G "Unix Makefiles"
+    emmake make -j"$(nproc 2>/dev/null || echo 4)"
+    cd ../../..
+    if [ ! -f "$CAPSTONE_LIB" ]; then
+        echo "ERROR: capstone build finished but '$CAPSTONE_LIB' was not produced" >&2
+        exit 1
+    fi
+    echo ">>> Capstone built successfully."
 fi
 
 # ── Vue / npm dependencies ────────────────────────────────────────────────────
@@ -61,15 +87,19 @@ echo ">>> Compiling wasmasm.c with emcc..."
 emcc -O3 \
     -s WASM=1 \
     -s EXPORTED_RUNTIME_METHODS='["cwrap", "stringToUTF8", "UTF8ToString"]' \
-    -s EXPORTED_FUNCTIONS='["_assemble", "_malloc", "_free"]' \
+    -s EXPORTED_FUNCTIONS='["_assemble", "_disassemble", "_malloc", "_free"]' \
     -s ENVIRONMENT='web' \
     -s EXPORT_ES6=1 \
     -s MODULARIZE=1 \
     -I third_party/keystone/include \
+    -I third_party/capstone/include \
     -L third_party/keystone/build/llvm/lib \
+    -L third_party/capstone/build \
     third_party/keystone/build/llvm/lib/libkeystone.a \
+    third_party/capstone/build/libcapstone.a \
     wasmasm.c \
     -lkeystone \
+    -lcapstone \
     -o "$TMP_JS"
 
 if [ ! -f "$TMP_JS" ] || [ ! -f "$TMP_WASM" ]; then

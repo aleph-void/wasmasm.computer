@@ -1,6 +1,11 @@
-KEYSTONE_DIR       := third_party/keystone
-KEYSTONE_LIB       := $(KEYSTONE_DIR)/build/llvm/lib/libkeystone.a
+KEYSTONE_DIR        := third_party/keystone
+KEYSTONE_LIB        := $(KEYSTONE_DIR)/build/llvm/lib/libkeystone.a
 KEYSTONE_NATIVE_LIB := $(KEYSTONE_DIR)/build-native/llvm/lib/libkeystone.a
+
+CAPSTONE_DIR        := third_party/capstone
+CAPSTONE_LIB        := $(CAPSTONE_DIR)/build/libcapstone.a
+CAPSTONE_NATIVE_LIB := $(CAPSTONE_DIR)/build-native/libcapstone.a
+
 ASSETS_DIR    := wasmasm/src/assets
 TMP_JS        := /tmp/wasmasm.js
 TMP_WASM      := /tmp/wasmasm.wasm
@@ -10,12 +15,12 @@ EMCC_FLAGS := \
 	-O3 \
 	-s WASM=1 \
 	-s EXPORTED_RUNTIME_METHODS='["cwrap","stringToUTF8","UTF8ToString"]' \
-	-s EXPORTED_FUNCTIONS='["_assemble","_malloc","_free"]' \
+	-s EXPORTED_FUNCTIONS='["_assemble","_disassemble","_malloc","_free"]' \
 	-s ENVIRONMENT='web' \
 	-s EXPORT_ES6=1 \
 	-s MODULARIZE=1
 
-.PHONY: all build keystone npm-install vue-build test clean distclean
+.PHONY: all build keystone capstone npm-install vue-build serve test clean distclean
 
 all: build
 
@@ -23,14 +28,18 @@ all: build
 build: $(ASSETS_DIR)/wasmasm.js $(ASSETS_DIR)/wasmasm.wasm
 	$(MAKE) vue-build
 
-## Emscripten compile step — depends on keystone library and C source
-$(ASSETS_DIR)/wasmasm.js $(ASSETS_DIR)/wasmasm.wasm: wasmasm.c $(KEYSTONE_LIB) | $(ASSETS_DIR) wasmasm/node_modules
+## Emscripten compile step — depends on keystone+capstone libraries and C source
+$(ASSETS_DIR)/wasmasm.js $(ASSETS_DIR)/wasmasm.wasm: wasmasm.c $(KEYSTONE_LIB) $(CAPSTONE_LIB) | $(ASSETS_DIR) wasmasm/node_modules
 	emcc $(EMCC_FLAGS) \
 		-I $(KEYSTONE_DIR)/include \
+		-I $(CAPSTONE_DIR)/include \
 		-L $(KEYSTONE_DIR)/build/llvm/lib \
+		-L $(CAPSTONE_DIR)/build \
 		$(KEYSTONE_LIB) \
+		$(CAPSTONE_LIB) \
 		wasmasm.c \
 		-lkeystone \
+		-lcapstone \
 		-o $(TMP_JS)
 	@printf '/* eslint-disable */\n' > $(ASSETS_DIR)/wasmasm.js
 	@cat $(TMP_JS) >> $(ASSETS_DIR)/wasmasm.js
@@ -38,7 +47,7 @@ $(ASSETS_DIR)/wasmasm.js $(ASSETS_DIR)/wasmasm.wasm: wasmasm.c $(KEYSTONE_LIB) |
 	@mv $(TMP_WASM) $(ASSETS_DIR)/wasmasm.wasm
 	@echo "Assets written to $(ASSETS_DIR)"
 
-## Build keystone static library via cmake
+## Build keystone static library via Emscripten cmake
 keystone: $(KEYSTONE_LIB)
 
 $(KEYSTONE_LIB):
@@ -50,6 +59,20 @@ $(KEYSTONE_LIB):
 		-DLLVM_TARGETS_TO_BUILD="all" \
 		-G "Unix Makefiles"
 	emmake $(MAKE) -C $(KEYSTONE_DIR)/build -j$(shell nproc 2>/dev/null || echo 4)
+
+## Build capstone static library via Emscripten cmake
+capstone: $(CAPSTONE_LIB)
+
+$(CAPSTONE_LIB):
+	@echo "Building capstone with Emscripten..."
+	mkdir -p $(CAPSTONE_DIR)/build
+	cd $(CAPSTONE_DIR)/build && emcmake cmake .. \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DBUILD_SHARED_LIBS=OFF \
+		-DCAPSTONE_BUILD_TESTS=OFF \
+		-DCAPSTONE_BUILD_CSTOOL=OFF \
+		-G "Unix Makefiles"
+	emmake $(MAKE) -C $(CAPSTONE_DIR)/build -j$(shell nproc 2>/dev/null || echo 4)
 
 ## Install Vue/npm dependencies
 npm-install: wasmasm/node_modules
@@ -77,15 +100,29 @@ $(KEYSTONE_NATIVE_LIB):
 		-G "Unix Makefiles"
 	$(MAKE) -C $(KEYSTONE_DIR)/build-native -j$(shell nproc 2>/dev/null || echo 4)
 
+## Native capstone build used only by the test target
+$(CAPSTONE_NATIVE_LIB):
+	@echo "Building capstone natively for tests..."
+	mkdir -p $(CAPSTONE_DIR)/build-native
+	cd $(CAPSTONE_DIR)/build-native && cmake .. \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DBUILD_SHARED_LIBS=OFF \
+		-DCAPSTONE_BUILD_TESTS=OFF \
+		-DCAPSTONE_BUILD_CSTOOL=OFF \
+		-G "Unix Makefiles"
+	$(MAKE) -C $(CAPSTONE_DIR)/build-native -j$(shell nproc 2>/dev/null || echo 4)
+
 ## Compile and run the native test suite against wasmasm.c
 ## Uses a stub emscripten.h so the code builds without Emscripten installed.
-test: $(KEYSTONE_NATIVE_LIB)
+test: $(KEYSTONE_NATIVE_LIB) $(CAPSTONE_NATIVE_LIB)
 	g++ -o $(TEST_BIN) \
 		-I $(KEYSTONE_DIR)/include \
+		-I $(CAPSTONE_DIR)/include \
 		-I tests \
 		wasmasm.c \
 		tests/test_wasmasm.c \
-		$(KEYSTONE_NATIVE_LIB)
+		$(KEYSTONE_NATIVE_LIB) \
+		$(CAPSTONE_NATIVE_LIB)
 	./$(TEST_BIN)
 
 ## Remove generated assets, Vue dist, and test binary
@@ -95,10 +132,12 @@ clean:
 	rm -f $(TMP_JS) $(TMP_WASM)
 	rm -f $(TEST_BIN)
 
-## Remove everything including the keystone builds and node_modules
+## Remove everything including the keystone/capstone builds and node_modules
 distclean: clean
 	rm -rf $(KEYSTONE_DIR)/build
 	rm -rf $(KEYSTONE_DIR)/build-native
+	rm -rf $(CAPSTONE_DIR)/build
+	rm -rf $(CAPSTONE_DIR)/build-native
 	rm -rf wasmasm/node_modules
 
 $(ASSETS_DIR):

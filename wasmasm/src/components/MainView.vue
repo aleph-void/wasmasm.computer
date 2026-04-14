@@ -6,11 +6,26 @@
         <p class="section-label">// Assembler</p>
         <h1 class="assembler-title">Browser-based CPU Assembler</h1>
         <p class="assembler-desc">
-          Paste assembly instructions below, choose your target architecture, and click Assemble.
-          Supports x86, ARM, AArch64, MIPS, PPC, and SPARC — powered by
-          <a href="https://www.keystone-engine.org/" target="_blank" rel="noopener">Keystone Engine</a>
-          compiled to WebAssembly.
+          Paste assembly instructions or hex bytes, choose your target architecture, and click the action button.
+          Powered by <a href="https://www.keystone-engine.org/" target="_blank" rel="noopener">Keystone</a>
+          (assemble) and <a href="https://www.capstone-engine.org/" target="_blank" rel="noopener">Capstone</a>
+          (disassemble) compiled to WebAssembly.
         </p>
+      </div>
+
+      <div class="mode-toggle" role="group" aria-label="Mode">
+        <button
+          class="mode-btn"
+          :class="{ 'mode-btn--active': mode === 'assemble' }"
+          type="button"
+          @click="setMode('assemble')"
+        >Assemble</button>
+        <button
+          class="mode-btn"
+          :class="{ 'mode-btn--active': mode === 'disassemble' }"
+          type="button"
+          @click="setMode('disassemble')"
+        >Disassemble</button>
       </div>
 
       <div class="config-row">
@@ -49,24 +64,24 @@
 
       <div class="pane-row">
         <div class="pane">
-          <p class="section-label">// Input</p>
+          <p class="section-label">{{ mode === 'assemble' ? '// Input (assembly)' : '// Input (hex bytes)' }}</p>
           <textarea
             id="input"
             class="asm-textarea"
             v-model="input"
-            placeholder="mov eax, edx"
+            :placeholder="inputPlaceholder"
             spellcheck="false"
           ></textarea>
         </div>
 
         <div class="pane">
-          <p class="section-label">// Output</p>
+          <p class="section-label">{{ mode === 'assemble' ? '// Output (hex bytes)' : '// Output (assembly)' }}</p>
           <textarea
             id="output"
             class="asm-textarea asm-textarea--output"
             :value="output"
             readonly
-            placeholder="assembled bytes appear here"
+            :placeholder="outputPlaceholder"
             spellcheck="false"
           ></textarea>
         </div>
@@ -77,7 +92,9 @@
       </div>
 
       <div class="action-row">
-        <button class="btn-primary" @click="buttonClicked">Assemble</button>
+        <button class="btn-primary" @click="actionClicked">
+          {{ mode === 'assemble' ? 'Assemble' : 'Disassemble' }}
+        </button>
         <button class="btn-ghost" @click="copyClicked">Copy Link</button>
       </div>
 
@@ -91,14 +108,22 @@ export default {
   name: 'MainView',
   data() {
     return {
+      mode: 'assemble',
       input:  "",
       output: "",
       selectedISA: "",
       selectedWordSize: "",
       selectedEndianness: "",
-      selectedExtra: "",
       assembler: null,
       errorMessage: ""
+    }
+  },
+  computed: {
+    inputPlaceholder() {
+      return this.mode === 'assemble' ? 'mov eax, edx' : '89 d0'
+    },
+    outputPlaceholder() {
+      return this.mode === 'assemble' ? 'assembled bytes appear here' : 'disassembled instructions appear here'
     }
   },
   async created() {
@@ -106,40 +131,88 @@ export default {
     this.errorMessage = "";
   },
   async mounted() {
-    let queryString = window.location.search;
-    let urlParams = new URLSearchParams(queryString);
-    this.selectedEndianness = urlParams.get('endian');
-    this.selectedISA = urlParams.get('isa');
-    this.selectedWordSize = urlParams.get('word');
-    this.input = urlParams.get('input');
+    const urlParams = new URLSearchParams(window.location.search);
+    this.selectedEndianness = urlParams.get('endian') || "";
+    this.selectedISA        = urlParams.get('isa')    || "";
+    this.selectedWordSize   = urlParams.get('word')   || "";
+    this.input              = urlParams.get('input')  || "";
+    this.mode               = urlParams.get('mode') === 'disassemble' ? 'disassemble' : 'assemble';
     this.errorMessage = "";
   },
   methods: {
+    setMode(m) {
+      this.mode = m;
+      this.output = "";
+      this.errorMessage = "";
+    },
     selectedWordSizeChanged() {},
     selectedEndiannessChanged() {},
     copyClicked() {
-      const link = window.location.origin + '/?' + 'isa=' + this.selectedISA + '&word=' + this.selectedWordSize + '&endian=' + this.selectedEndianness + '&input=' + encodeURIComponent(this.input);
+      const link = window.location.origin + '/?'
+        + 'mode='  + this.mode
+        + '&isa='  + this.selectedISA
+        + '&word=' + this.selectedWordSize
+        + '&endian=' + this.selectedEndianness
+        + '&input=' + encodeURIComponent(this.input);
       navigator.clipboard.writeText(link);
     },
-    buttonClicked() {
+    actionClicked() {
+      if (this.mode === 'assemble') {
+        this._runAssemble();
+      } else {
+        this._runDisassemble();
+      }
+    },
+    _runAssemble() {
       console.log(this.$route.query);
       this.errorMessage = "";
-      const inputBuffer = this.assembler._malloc(this.input.length + 1);
+      const inputBuffer  = this.assembler._malloc(this.input.length + 1);
       this.assembler.stringToUTF8(this.input, inputBuffer, this.input.length + 1);
-      const isaBuffer = this.assembler._malloc(this.selectedISA.length + 1);
+      const isaBuffer    = this.assembler._malloc(this.selectedISA.length + 1);
       this.assembler.stringToUTF8(this.selectedISA, isaBuffer, this.selectedISA.length + 1);
       const outputBuffer = this.assembler._malloc((this.input.length * 4) + 1);
-      this.assembler._assemble(inputBuffer, this.input.length, isaBuffer, this.selectedEndianness === 'big' ? 1 : 2, parseInt(this.selectedWordSize), outputBuffer);
+      this.assembler._assemble(
+        inputBuffer, this.input.length,
+        isaBuffer,
+        this.selectedEndianness === 'big' ? 1 : 2,
+        parseInt(this.selectedWordSize),
+        outputBuffer
+      );
       this.assembler._free(inputBuffer);
       this.assembler._free(isaBuffer);
       const out = this.assembler.UTF8ToString(outputBuffer);
+      this.assembler._free(outputBuffer);
       if (out) {
         this.output = out;
       } else {
         this.errorMessage = "Assembly failed. Check your input and settings and try again.";
       }
+    },
+    _runDisassemble() {
+      this.errorMessage = "";
+      const inputBuffer  = this.assembler._malloc(this.input.length + 1);
+      this.assembler.stringToUTF8(this.input, inputBuffer, this.input.length + 1);
+      const isaBuffer    = this.assembler._malloc(this.selectedISA.length + 1);
+      this.assembler.stringToUTF8(this.selectedISA, isaBuffer, this.selectedISA.length + 1);
+      // Generous output buffer: each byte can expand to ~80 chars of disassembly text
+      const outSize = Math.max(4096, this.input.length * 20);
+      const outputBuffer = this.assembler._malloc(outSize);
+      this.assembler._disassemble(
+        inputBuffer, this.input.length,
+        isaBuffer,
+        this.selectedEndianness === 'big' ? 1 : 2,
+        parseInt(this.selectedWordSize),
+        outputBuffer
+      );
+      this.assembler._free(inputBuffer);
+      this.assembler._free(isaBuffer);
+      const out = this.assembler.UTF8ToString(outputBuffer);
       this.assembler._free(outputBuffer);
-      return false;
+      if (out) {
+        this.output = out;
+      } else {
+        this.errorMessage = "Disassembly failed. Check your hex bytes, ISA, and settings.";
+      }
     }
   }
 }
@@ -190,6 +263,41 @@ export default {
 
 .assembler-desc a:hover {
   color: #a78bfa;
+}
+
+/* Mode toggle */
+.mode-toggle {
+  display: inline-flex;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+  align-self: flex-start;
+}
+
+.mode-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.875rem;
+  font-weight: 500;
+  padding: 0.5rem 1.25rem;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.mode-btn + .mode-btn {
+  border-left: 1px solid var(--border);
+}
+
+.mode-btn--active {
+  background: var(--accent);
+  color: #fff;
+}
+
+.mode-btn:not(.mode-btn--active):hover {
+  background: var(--bg-card);
+  color: var(--text-primary);
 }
 
 /* Config row */

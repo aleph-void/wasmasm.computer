@@ -17,7 +17,7 @@ const { test, expect } = require('@playwright/test')
  * Wait for the WASM module to finish loading.  The component resolves the
  * Emscripten promise in its async created() hook with no visible loading
  * indicator, so we rely on networkidle (all XHR/fetch activity settled,
- * which includes the .wasm fetch) plus a short stability check.
+ * which includes the .wasm fetch).
  */
 async function waitForWasm(page) {
   await page.waitForLoadState('networkidle')
@@ -28,15 +28,38 @@ async function waitForWasm(page) {
  * Returns the output textarea text after the operation.
  */
 async function assemble(page, { input, isa, wordSize, endianness }) {
+  // Ensure we're in assemble mode
+  const asmToggle = page.locator('button.mode-btn', { hasText: 'Assemble' })
+  if (!(await asmToggle.evaluate(el => el.classList.contains('mode-btn--active')))) {
+    await asmToggle.click()
+  }
   await page.fill('#input', input)
   await page.selectOption('#selectedISA', isa)
   await page.selectOption('#selectedWordSize', wordSize)
   await page.selectOption('#selectedEndianness', endianness)
   await page.click('button.btn-primary')
-  // Wait for the output textarea to become non-empty or for an error to appear
   await page.waitForFunction(() => {
     const out = document.querySelector('#output')
-    const err = document.querySelector('span[style*="color: red"]')
+    const err = document.querySelector('.error-banner')
+    return (out && out.value.trim() !== '') || (err && err.textContent.trim() !== '')
+  }, { timeout: 10_000 })
+  return page.inputValue('#output')
+}
+
+/**
+ * Fill in the disassembler form and click Disassemble.
+ * Returns the output textarea text after the operation.
+ */
+async function disassemble(page, { input, isa, wordSize, endianness }) {
+  await page.locator('button.mode-btn', { hasText: 'Disassemble' }).click()
+  await page.fill('#input', input)
+  await page.selectOption('#selectedISA', isa)
+  await page.selectOption('#selectedWordSize', wordSize)
+  await page.selectOption('#selectedEndianness', endianness)
+  await page.click('button.btn-primary')
+  await page.waitForFunction(() => {
+    const out = document.querySelector('#output')
+    const err = document.querySelector('.error-banner')
     return (out && out.value.trim() !== '') || (err && err.textContent.trim() !== '')
   }, { timeout: 10_000 })
   return page.inputValue('#output')
@@ -60,7 +83,7 @@ test.describe('page structure', () => {
 
   test('renders the ISA select with all supported architectures', async ({ page }) => {
     const options = await page.locator('#selectedISA option:not([disabled])').allTextContents()
-    expect(options).toEqual(expect.arrayContaining(['ARM', 'x86', 'MIPS', 'PPC', 'SPARC']))
+    expect(options).toEqual(expect.arrayContaining(['x86', 'ARM', 'AArch64', 'MIPS', 'PPC', 'SPARC']))
   })
 
   test('renders word-size options 16, 32 and 64-bit', async ({ page }) => {
@@ -68,14 +91,25 @@ test.describe('page structure', () => {
     expect(options).toEqual(expect.arrayContaining(['16-bit', '32-bit', '64-bit']))
   })
 
-  test('renders endianness options Big and Small', async ({ page }) => {
+  test('renders endianness options', async ({ page }) => {
     const options = await page.locator('#selectedEndianness option:not([disabled])').allTextContents()
-    expect(options).toEqual(expect.arrayContaining(['Big', 'Small']))
+    expect(options).toEqual(expect.arrayContaining(['Little-endian', 'Big-endian']))
   })
 
-  test('Assemble and Copy Link buttons are visible', async ({ page }) => {
+  test('Assemble/Disassemble mode toggle buttons are visible', async ({ page }) => {
+    await expect(page.locator('button.mode-btn', { hasText: 'Assemble' })).toBeVisible()
+    await expect(page.locator('button.mode-btn', { hasText: 'Disassemble' })).toBeVisible()
+  })
+
+  test('action button and Copy Link button are visible', async ({ page }) => {
     await expect(page.locator('button.btn-primary')).toBeVisible()
-    await expect(page.locator('button.btn-secondary')).toBeVisible()
+    await expect(page.locator('button.btn-ghost')).toBeVisible()
+  })
+
+  test('defaults to assemble mode with Assemble button active', async ({ page }) => {
+    const asmBtn = page.locator('button.mode-btn', { hasText: 'Assemble' })
+    await expect(asmBtn).toHaveClass(/mode-btn--active/)
+    await expect(page.locator('button.btn-primary')).toHaveText('Assemble')
   })
 })
 
@@ -157,6 +191,129 @@ test.describe('ARM assembly', () => {
   })
 })
 
+// ── disassembly – x86 ────────────────────────────────────────────────────────
+
+test.describe('x86 disassembly', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/')
+    await waitForWasm(page)
+  })
+
+  test('disassembles x86 32-bit: 01 c8 → contains "add"', async ({ page }) => {
+    const output = await disassemble(page, {
+      input: '01 c8',
+      isa: 'x86',
+      wordSize: '32',
+      endianness: 'small',
+    })
+    expect(output.toLowerCase()).toContain('add')
+  })
+
+  test('disassembles x86 64-bit: 48 01 c8 → contains "add"', async ({ page }) => {
+    const output = await disassemble(page, {
+      input: '48 01 c8',
+      isa: 'x86',
+      wordSize: '64',
+      endianness: 'small',
+    })
+    expect(output.toLowerCase()).toContain('add')
+  })
+
+  test('disassembles x86 32-bit: 90 → contains "nop"', async ({ page }) => {
+    const output = await disassemble(page, {
+      input: '90',
+      isa: 'x86',
+      wordSize: '32',
+      endianness: 'small',
+    })
+    expect(output.toLowerCase()).toContain('nop')
+  })
+
+  test('disassembly output includes address prefix (0x)', async ({ page }) => {
+    const output = await disassemble(page, {
+      input: '90',
+      isa: 'x86',
+      wordSize: '32',
+      endianness: 'small',
+    })
+    expect(output).toContain('0x')
+  })
+})
+
+// ── disassembly – ARM ─────────────────────────────────────────────────────────
+
+test.describe('ARM disassembly', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/')
+    await waitForWasm(page)
+  })
+
+  test('disassembles ARM 32-bit little-endian: 05 10 42 e0 → contains "sub"', async ({ page }) => {
+    const output = await disassemble(page, {
+      input: '05 10 42 e0',
+      isa: 'arm',
+      wordSize: '32',
+      endianness: 'small',
+    })
+    expect(output.toLowerCase()).toContain('sub')
+  })
+
+  test('disassembles ARM Thumb: f0 24 → contains "movs"', async ({ page }) => {
+    const output = await disassemble(page, {
+      input: 'f0 24',
+      isa: 'arm',
+      wordSize: '16',
+      endianness: 'small',
+    })
+    expect(output.toLowerCase()).toContain('movs')
+  })
+})
+
+// ── round-trip (assemble then disassemble) ────────────────────────────────────
+
+test.describe('round-trip', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/')
+    await waitForWasm(page)
+  })
+
+  test('x86: assemble add eax, ecx then disassemble result contains "add"', async ({ page }) => {
+    const bytes = await assemble(page, {
+      input: 'add eax, ecx',
+      isa: 'x86',
+      wordSize: '32',
+      endianness: 'small',
+    })
+    expect(bytes.trim()).toBe('01 c8')
+
+    const asm = await disassemble(page, {
+      input: bytes.trim(),
+      isa: 'x86',
+      wordSize: '32',
+      endianness: 'small',
+    })
+    expect(asm.toLowerCase()).toContain('add')
+  })
+
+  test('ARM: assemble sub r1,r2,r5 then disassemble result contains "sub"', async ({ page }) => {
+    const bytes = await assemble(page, {
+      input: 'sub r1, r2, r5',
+      isa: 'arm',
+      wordSize: '32',
+      endianness: 'small',
+    })
+    expect(bytes.trim()).toBe('05 10 42 e0')
+
+    const asm = await disassemble(page, {
+      input: bytes.trim(),
+      isa: 'arm',
+      wordSize: '32',
+      endianness: 'small',
+    })
+    expect(asm.toLowerCase()).toContain('sub')
+  })
+})
+
 // ── assembly – error handling ─────────────────────────────────────────────────
 
 test.describe('error handling', () => {
@@ -165,36 +322,38 @@ test.describe('error handling', () => {
     await waitForWasm(page)
   })
 
-  test('shows an error message for invalid assembly input', async ({ page }) => {
+  test('shows an error banner for invalid assembly input', async ({ page }) => {
     await page.fill('#input', '@@not_an_instruction@@')
     await page.selectOption('#selectedISA', 'x86')
     await page.selectOption('#selectedWordSize', '32')
     await page.selectOption('#selectedEndianness', 'small')
     await page.click('button.btn-primary')
-    // Wait for error span to become non-empty
-    await page.waitForFunction(() => {
-      const span = document.querySelector('span[style*="color: red"]')
-      return span && span.textContent.trim() !== ''
-    }, { timeout: 10_000 })
-    const errorText = await page.locator('span[style*="color: red"]').textContent()
-    expect(errorText.trim()).not.toBe('')
+    await page.waitForSelector('.error-banner', { timeout: 10_000 })
+    await expect(page.locator('.error-banner')).toBeVisible()
+  })
+
+  test('shows an error banner for invalid hex in disassemble mode', async ({ page }) => {
+    await page.locator('button.mode-btn', { hasText: 'Disassemble' }).click()
+    await page.fill('#input', 'ZZ ZZ')
+    await page.selectOption('#selectedISA', 'x86')
+    await page.selectOption('#selectedWordSize', '32')
+    await page.selectOption('#selectedEndianness', 'small')
+    await page.click('button.btn-primary')
+    await page.waitForSelector('.error-banner', { timeout: 10_000 })
+    await expect(page.locator('.error-banner')).toBeVisible()
   })
 
   test('clears a previous error when a successful assembly follows', async ({ page }) => {
-    // First: trigger an error
+    // trigger an error first
     await page.fill('#input', '@@bad@@')
     await page.selectOption('#selectedISA', 'x86')
     await page.selectOption('#selectedWordSize', '32')
     await page.selectOption('#selectedEndianness', 'small')
     await page.click('button.btn-primary')
-    await page.waitForFunction(() => {
-      const span = document.querySelector('span[style*="color: red"]')
-      return span && span.textContent.trim() !== ''
-    })
-    // Then: assemble something valid
+    await page.waitForSelector('.error-banner')
+    // then succeed
     await assemble(page, { input: 'add eax, ecx', isa: 'x86', wordSize: '32', endianness: 'small' })
-    const errorText = await page.locator('span[style*="color: red"]').textContent()
-    expect(errorText.trim()).toBe('')
+    await expect(page.locator('.error-banner')).not.toBeVisible()
   })
 })
 
@@ -208,6 +367,14 @@ test.describe('URL parameter loading', () => {
     await expect(page.locator('#selectedWordSize')).toHaveValue('32')
     await expect(page.locator('#selectedEndianness')).toHaveValue('big')
     await expect(page.locator('#input')).toHaveValue('sub r1, r2, r5')
+  })
+
+  test('restores disassemble mode from the mode query param', async ({ page }) => {
+    await page.goto('/?mode=disassemble&isa=x86&word=32&endian=small&input=01+c8')
+    await waitForWasm(page)
+    const disBtn = page.locator('button.mode-btn', { hasText: 'Disassemble' })
+    await expect(disBtn).toHaveClass(/mode-btn--active/)
+    await expect(page.locator('button.btn-primary')).toHaveText('Disassemble')
   })
 
   test('assembles correctly after loading state from URL parameters', async ({ page }) => {
@@ -233,11 +400,25 @@ test.describe('copy link', () => {
     await page.selectOption('#selectedISA', 'x86')
     await page.selectOption('#selectedWordSize', '32')
     await page.selectOption('#selectedEndianness', 'small')
-    await page.click('button.btn-secondary')
+    await page.click('button.btn-ghost')
     const clipboard = await page.evaluate(() => navigator.clipboard.readText())
+    expect(clipboard).toContain('mode=assemble')
     expect(clipboard).toContain('isa=x86')
     expect(clipboard).toContain('word=32')
     expect(clipboard).toContain('endian=small')
     expect(clipboard).toContain('input=')
+  })
+
+  test('includes mode=disassemble in link when in disassemble mode', async ({ page }) => {
+    await page.goto('/')
+    await waitForWasm(page)
+    await page.locator('button.mode-btn', { hasText: 'Disassemble' }).click()
+    await page.fill('#input', '90')
+    await page.selectOption('#selectedISA', 'x86')
+    await page.selectOption('#selectedWordSize', '32')
+    await page.selectOption('#selectedEndianness', 'small')
+    await page.click('button.btn-ghost')
+    const clipboard = await page.evaluate(() => navigator.clipboard.readText())
+    expect(clipboard).toContain('mode=disassemble')
   })
 })

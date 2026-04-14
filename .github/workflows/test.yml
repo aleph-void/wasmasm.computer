@@ -43,6 +43,30 @@ jobs:
             -G "Unix Makefiles"
           make -j$(nproc)
 
+      - name: Get capstone submodule commit hash
+        id: capstone-ref
+        run: echo "hash=$(git -C third_party/capstone rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache capstone native build
+        id: cache-capstone
+        uses: actions/cache@v4
+        with:
+          path: third_party/capstone/build-native
+          key: capstone-native-${{ runner.os }}-${{ steps.capstone-ref.outputs.hash }}
+
+      - name: Build capstone (native)
+        if: steps.cache-capstone.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p third_party/capstone/build-native
+          cd third_party/capstone/build-native
+          cmake .. \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DBUILD_SHARED_LIBS=OFF \
+            -DCAPSTONE_BUILD_TESTS=OFF \
+            -DCAPSTONE_BUILD_CSTOOL=OFF \
+            -G "Unix Makefiles"
+          make -j$(nproc)
+
       - name: Run C tests
         run: make test
 

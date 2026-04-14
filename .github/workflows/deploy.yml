@@ -1,7 +1,7 @@
 name: Deploy
 
 on:
-  # Only run the expensive WASM rebuild when C source or keystone actually changes.
+  # Only run the expensive WASM rebuild when C source or keystone/capstone actually changes.
   # Pure Vue / asset changes are handled by the faster pages.yml workflow instead.
   push:
     branches:
@@ -29,7 +29,7 @@ jobs:
       - name: Install build dependencies
         run: sudo apt-get update && sudo apt-get install -y cmake build-essential
 
-      # ── Emscripten (must come before keystone build) ─────────────────────────
+      # ── Emscripten (must come before keystone/capstone builds) ───────────────
 
       - name: Set up Emscripten
         uses: mymindstorm/setup-emsdk@v14
@@ -56,6 +56,32 @@ jobs:
             -DCMAKE_BUILD_TYPE=Release \
             -DBUILD_SHARED_LIBS=OFF \
             -DLLVM_TARGETS_TO_BUILD="all" \
+            -G "Unix Makefiles"
+          emmake make -j$(nproc)
+
+      # ── Capstone ─────────────────────────────────────────────────────────────
+
+      - name: Get capstone submodule commit hash
+        id: capstone-ref
+        run: echo "hash=$(git -C third_party/capstone rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache capstone Emscripten build
+        id: cache-capstone
+        uses: actions/cache@v4
+        with:
+          path: third_party/capstone/build
+          key: capstone-emscripten-${{ runner.os }}-${{ steps.capstone-ref.outputs.hash }}
+
+      - name: Build capstone (Emscripten)
+        if: steps.cache-capstone.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p third_party/capstone/build
+          cd third_party/capstone/build
+          emcmake cmake .. \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DBUILD_SHARED_LIBS=OFF \
+            -DCAPSTONE_BUILD_TESTS=OFF \
+            -DCAPSTONE_BUILD_CSTOOL=OFF \
             -G "Unix Makefiles"
           emmake make -j$(nproc)
 

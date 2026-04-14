@@ -10,11 +10,12 @@
  */
 
 export const mockAssembler = {
-  _malloc:      jest.fn().mockReturnValue(1000),
-  _free:        jest.fn(),
-  stringToUTF8: jest.fn(),
-  UTF8ToString: jest.fn().mockReturnValue(''),
-  _assemble:    jest.fn(),
+  _malloc:       jest.fn().mockReturnValue(1000),
+  _free:         jest.fn(),
+  stringToUTF8:  jest.fn(),
+  UTF8ToString:  jest.fn().mockReturnValue(''),
+  _assemble:     jest.fn(),
+  _disassemble:  jest.fn(),
 }
 
 // The real module default-exports a factory function whose return value
