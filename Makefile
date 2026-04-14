@@ -100,6 +100,7 @@ $(KEYSTONE_NATIVE_LIB):
 		-DBUILD_SHARED_LIBS=OFF \
 		-DBUILD_LIBS_ONLY=ON \
 		-DLLVM_TARGETS_TO_BUILD="all" \
+		-DCMAKE_CXX_FLAGS="-include cstdint" \
 		-G "Unix Makefiles"
 	$(MAKE) -C $(KEYSTONE_DIR)/build-native -j$(shell nproc 2>/dev/null || echo 4)
 

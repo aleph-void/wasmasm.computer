@@ -206,6 +206,10 @@ export default {
     },
     _runDisassemble() {
       this.errorMessage = "";
+      if (typeof this.assembler._disassemble !== 'function') {
+        this.errorMessage = "Disassembly is not available in this build.";
+        return;
+      }
       const inputBuffer  = this.assembler._malloc(this.input.length + 1);
       this.assembler.stringToUTF8(this.input, inputBuffer, this.input.length + 1);
       const isaBuffer    = this.assembler._malloc(this.selectedISA.length + 1);

@@ -28,8 +28,9 @@ async function waitForWasm(page) {
  * Returns the output textarea text after the operation.
  */
 async function assemble(page, { input, isa, wordSize, endianness }) {
-  // Ensure we're in assemble mode
-  const asmToggle = page.locator('button.mode-btn', { hasText: 'Assemble' })
+  // Ensure we're in assemble mode.
+  // Use /^Assemble$/ (exact regex) so we don't accidentally match "Disassemble".
+  const asmToggle = page.locator('button.mode-btn', { hasText: /^Assemble$/ })
   if (!(await asmToggle.evaluate(el => el.classList.contains('mode-btn--active')))) {
     await asmToggle.click()
   }
@@ -97,8 +98,9 @@ test.describe('page structure', () => {
   })
 
   test('Assemble/Disassemble mode toggle buttons are visible', async ({ page }) => {
-    await expect(page.locator('button.mode-btn', { hasText: 'Assemble' })).toBeVisible()
-    await expect(page.locator('button.mode-btn', { hasText: 'Disassemble' })).toBeVisible()
+    // Use exact regex to avoid "Assemble" matching "Disassemble" (substring).
+    await expect(page.locator('button.mode-btn', { hasText: /^Assemble$/ })).toBeVisible()
+    await expect(page.locator('button.mode-btn', { hasText: /^Disassemble$/ })).toBeVisible()
   })
 
   test('action button and Copy Link button are visible', async ({ page }) => {
@@ -107,7 +109,7 @@ test.describe('page structure', () => {
   })
 
   test('defaults to assemble mode with Assemble button active', async ({ page }) => {
-    const asmBtn = page.locator('button.mode-btn', { hasText: 'Assemble' })
+    const asmBtn = page.locator('button.mode-btn', { hasText: /^Assemble$/ })
     await expect(asmBtn).toHaveClass(/mode-btn--active/)
     await expect(page.locator('button.btn-primary')).toHaveText('Assemble')
   })
@@ -152,6 +154,25 @@ test.describe('x86 assembly', () => {
   })
 })
 
+// ── assembly – AArch64 ───────────────────────────────────────────────────────
+
+test.describe('AArch64 assembly', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/')
+    await waitForWasm(page)
+  })
+
+  test('assembles AArch64: ldr w1, [sp, #0x8] → e1 0b 40 b9', async ({ page }) => {
+    const output = await assemble(page, {
+      input: 'ldr w1, [sp, #0x8]',
+      isa: 'aarch64',
+      wordSize: '64',
+      endianness: 'small',
+    })
+    expect(output.trim()).toBe('e1 0b 40 b9')
+  })
+})
+
 // ── assembly – ARM ────────────────────────────────────────────────────────────
 
 test.describe('ARM assembly', () => {
@@ -188,6 +209,25 @@ test.describe('ARM assembly', () => {
       endianness: 'small',
     })
     expect(output.trim()).toBe('f0 24')
+  })
+})
+
+// ── assembly – multi-instruction ─────────────────────────────────────────────
+
+test.describe('multi-instruction assembly', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/')
+    await waitForWasm(page)
+  })
+
+  test('assembles multiple x86 instructions separated by newlines', async ({ page }) => {
+    const output = await assemble(page, {
+      input: 'nop\nnop',
+      isa: 'x86',
+      wordSize: '32',
+      endianness: 'small',
+    })
+    expect(output.trim()).toBe('90 90')
   })
 })
 
@@ -266,6 +306,35 @@ test.describe('ARM disassembly', () => {
       endianness: 'small',
     })
     expect(output.toLowerCase()).toContain('movs')
+  })
+})
+
+// ── hex input formats ─────────────────────────────────────────────────────────
+
+test.describe('hex input formats', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/')
+    await waitForWasm(page)
+  })
+
+  test('disassembles 0x-prefixed hex bytes', async ({ page }) => {
+    const output = await disassemble(page, {
+      input: '0x90',
+      isa: 'x86',
+      wordSize: '32',
+      endianness: 'small',
+    })
+    expect(output.toLowerCase()).toContain('nop')
+  })
+
+  test('disassembles comma-separated hex bytes', async ({ page }) => {
+    const output = await disassemble(page, {
+      input: '90,90',
+      isa: 'x86',
+      wordSize: '32',
+      endianness: 'small',
+    })
+    expect(output.toLowerCase()).toContain('nop')
   })
 })
 
@@ -357,6 +426,37 @@ test.describe('error handling', () => {
   })
 })
 
+// ── copy output button ────────────────────────────────────────────────────────
+
+test.describe('copy output button', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/')
+    await waitForWasm(page)
+  })
+
+  test('copy button is hidden before any output is produced', async ({ page }) => {
+    await expect(page.locator('button.btn-copy')).not.toBeVisible()
+  })
+
+  test('copy button appears after assembly produces output', async ({ page }) => {
+    await assemble(page, { input: 'nop', isa: 'x86', wordSize: '32', endianness: 'small' })
+    await expect(page.locator('button.btn-copy')).toBeVisible()
+  })
+
+  test('clicking copy button copies the assembled output to the clipboard', async ({ page }) => {
+    await assemble(page, { input: 'nop', isa: 'x86', wordSize: '32', endianness: 'small' })
+    await page.click('button.btn-copy')
+    const clipboard = await page.evaluate(() => navigator.clipboard.readText())
+    expect(clipboard.trim()).toBe('90')
+  })
+
+  test('copy button label changes to "Copied!" immediately after click', async ({ page }) => {
+    await assemble(page, { input: 'nop', isa: 'x86', wordSize: '32', endianness: 'small' })
+    await page.click('button.btn-copy')
+    await expect(page.locator('button.btn-copy')).toHaveText('Copied!')
+  })
+})
+
 // ── URL parameter pre-population ──────────────────────────────────────────────
 
 test.describe('URL parameter loading', () => {
@@ -387,6 +487,19 @@ test.describe('URL parameter loading', () => {
     }, { timeout: 10_000 })
     const output = await page.inputValue('#output')
     expect(output.trim()).toBe('01 c8')
+  })
+
+  test('disassembles correctly after loading disassemble mode from URL parameters', async ({ page }) => {
+    await page.goto('/?mode=disassemble&isa=x86&word=32&endian=small&input=01+c8')
+    await waitForWasm(page)
+    await page.click('button.btn-primary')
+    await page.waitForFunction(() => {
+      const out = document.querySelector('#output')
+      const err = document.querySelector('.error-banner')
+      return (out && out.value.trim() !== '') || (err && err.textContent.trim() !== '')
+    }, { timeout: 10_000 })
+    const output = await page.inputValue('#output')
+    expect(output.toLowerCase()).toContain('add')
   })
 })
 

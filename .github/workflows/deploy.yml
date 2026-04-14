@@ -1,16 +1,14 @@
 name: Deploy
 
 on:
-  # Only run the expensive WASM rebuild when C source or keystone/capstone actually changes.
-  # Pure Vue / asset changes are handled by the faster pages.yml workflow instead.
+  # Run on every push to main/master.  The keystone and capstone libraries are
+  # cached by submodule commit hash (see Cache steps below), so pushes that
+  # only change Vue source skip the expensive Emscripten library builds and
+  # just re-run emcc + npm run build — which is fast.
   push:
     branches:
       - master
       - main
-    paths:
-      - 'wasmasm.c'
-      - 'third_party/keystone/**'
-      - 'third_party/capstone/**'
   # Allow a manual full rebuild + deploy at any time.
   workflow_dispatch:
 

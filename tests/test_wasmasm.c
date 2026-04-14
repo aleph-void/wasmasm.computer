@@ -191,6 +191,21 @@ static void test_assemble_mips(void)
            "and $9, $6, $7", "mips", 0, 64, "24 48 c7 00 ");
 }
 
+/* ── assemble: PPC ───────────────────────────────────────────────────────── */
+
+static void test_assemble_ppc(void)
+{
+    printf("\n=== Assemble: PPC tests ===\n");
+
+    /* nop (ori 0,0,0) big-endian → 60 00 00 00 */
+    RUN_OK("ppc 32-bit big-endian: nop",
+           "nop", "ppc", 1, 32, "60 00 00 00 ");
+
+    /* add r3, r4, r5 big-endian → 7c 64 2a 14 */
+    RUN_OK("ppc 32-bit big-endian: add 3, 4, 5",
+           "add 3, 4, 5", "ppc", 1, 32, "7c 64 2a 14 ");
+}
+
 /* ── assemble: SPARC ─────────────────────────────────────────────────────── */
 
 static void test_assemble_sparc(void)
@@ -277,6 +292,17 @@ static void test_disassemble_aarch64(void)
                     "e1 0b 40 b9", "aarch64", 2, 64, "ldr");
 }
 
+/* ── disassemble: SPARC ──────────────────────────────────────────────────── */
+
+static void test_disassemble_sparc(void)
+{
+    printf("\n=== Disassemble: SPARC tests ===\n");
+
+    /* 86 00 40 02 = add %g1, %g2, %g3 (SPARC BE) */
+    DISASM_CONTAINS("sparc 32-bit big-endian: 86 00 40 02 → add",
+                    "86 00 40 02", "sparc", 1, 32, "add");
+}
+
 /* ── disassemble: MIPS ───────────────────────────────────────────────────── */
 
 static void test_disassemble_mips(void)
@@ -290,6 +316,29 @@ static void test_disassemble_mips(void)
     /* 00 c7 48 24 = and $9, $6, $7 (MIPS32 BE) */
     DISASM_CONTAINS("mips 32-bit big-endian: 00 c7 48 24 → and",
                     "00 c7 48 24", "mips", 1, 32, "and");
+
+    /* 24 48 c7 00 = and $t1, $a2, $a3 (MIPS64 LE) */
+    DISASM_CONTAINS("mips 64-bit little-endian: 24 48 c7 00 → and",
+                    "24 48 c7 00", "mips", 2, 64, "and");
+}
+
+/* ── disassemble: hex parser edge cases ─────────────────────────────────── */
+
+static void test_hex_parser(void)
+{
+    printf("\n=== Disassemble: hex parser edge cases ===\n");
+
+    /* 0x-prefixed single byte */
+    DISASM_CONTAINS("0x-prefixed: 0x90 → nop",
+                    "0x90", "x86", 2, 32, "nop");
+
+    /* comma-separated bytes (no spaces) */
+    DISASM_CONTAINS("comma-separated: 90,90 → nop",
+                    "90,90", "x86", 2, 32, "nop");
+
+    /* 0x-prefixed and comma-separated */
+    DISASM_CONTAINS("0x-prefix + comma: 0x90,0x90 → nop",
+                    "0x90,0x90", "x86", 2, 32, "nop");
 }
 
 /* ── disassemble: output format ──────────────────────────────────────────── */
@@ -364,6 +413,40 @@ static void test_roundtrip(void)
             check_contains("round-trip arm: sub r1, r2, r5", r, dis_out, "sub");
         }
     }
+
+    /* Assemble AArch64 ldr w1, [sp, #0x8] → "e1 0b 40 b9 ", then disassemble */
+    {
+        char asm_out[OUTPUT_SIZE];
+        memset(asm_out, 0, OUTPUT_SIZE);
+        const char *insn = "ldr w1, [sp, #0x8]";
+        int r = assemble((char *)insn, (int)strlen(insn), (char *)"aarch64", 2, 64, asm_out);
+        if (r != 0) {
+            printf("  FAIL: round-trip aarch64 ldr — assemble step failed\n");
+            fail_count++;
+        } else {
+            char dis_out[OUTPUT_SIZE];
+            memset(dis_out, 0, OUTPUT_SIZE);
+            r = disassemble(asm_out, (int)strlen(asm_out), (char *)"aarch64", 2, 64, dis_out);
+            check_contains("round-trip aarch64: ldr w1, [sp, #0x8]", r, dis_out, "ldr");
+        }
+    }
+
+    /* Assemble MIPS32 LE and $9, $6, $7 → "24 48 c7 00 ", then disassemble */
+    {
+        char asm_out[OUTPUT_SIZE];
+        memset(asm_out, 0, OUTPUT_SIZE);
+        const char *insn = "and $9, $6, $7";
+        int r = assemble((char *)insn, (int)strlen(insn), (char *)"mips", 2, 32, asm_out);
+        if (r != 0) {
+            printf("  FAIL: round-trip mips and — assemble step failed\n");
+            fail_count++;
+        } else {
+            char dis_out[OUTPUT_SIZE];
+            memset(dis_out, 0, OUTPUT_SIZE);
+            r = disassemble(asm_out, (int)strlen(asm_out), (char *)"mips", 2, 32, dis_out);
+            check_contains("round-trip mips: and $9, $6, $7", r, dis_out, "and");
+        }
+    }
 }
 
 /* ── entry point ─────────────────────────────────────────────────────────── */
@@ -375,6 +458,7 @@ int main(void)
     test_assemble_arm();
     test_assemble_aarch64();
     test_assemble_mips();
+    test_assemble_ppc();
     test_assemble_sparc();
 
     test_disassemble_error_paths();
@@ -382,6 +466,8 @@ int main(void)
     test_disassemble_arm();
     test_disassemble_aarch64();
     test_disassemble_mips();
+    test_disassemble_sparc();
+    test_hex_parser();
     test_disassemble_output_format();
 
     test_roundtrip();

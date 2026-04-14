@@ -76,7 +76,7 @@ int assemble(char *input, int input_size, char *isa, int endianness, int word_si
         mode = mode + KS_MODE_LITTLE_ENDIAN;
       }
 
-      err = ks_open(_isa, mode, &ks);
+      err = ks_open((ks_arch)_isa, mode, &ks);
       if (err != KS_ERR_OK) {
           printf("ERROR: failed on ks_open(), quit\n");
           return -1;
@@ -225,7 +225,7 @@ int disassemble(char *input, int input_size, char *isa, int endianness, int word
         }
     }
 
-    if (cs_open(_isa, mode, &cs) != CS_ERR_OK) {
+    if (cs_open(_isa, (cs_mode)mode, &cs) != CS_ERR_OK) {
         printf("ERROR: failed on cs_open()\n");
         free(bytes);
         return -1;

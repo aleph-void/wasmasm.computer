@@ -1,9 +1,10 @@
 .DS_Store
 node_modules
 /dist
-# wasmasm.js / wasmasm.wasm are committed so the fast webpack-only deploy
-# workflow (pages.yml) can build and deploy without the Emscripten toolchain.
-# wasmdasm.* remains ignored — it is unused scaffolding.
+# Generated WASM artifacts — built by `make build` / deploy.yml, not committed.
+src/assets/wasmasm.js
+src/assets/wasmasm.wasm
+# Old unused scaffolding.
 src/assets/wasmdasm.*
 
 # local env files

@@ -1,4 +1,5 @@
 import { mount, flushPromises } from '@vue/test-utils'
+import { toRaw } from 'vue'
 import MainView from '../../src/components/MainView.vue'
 // mockAssembler is the same object that the component will receive from the
 // mocked factory — we can inspect it and control its return values here.
@@ -117,7 +118,9 @@ describe('WASM initialisation', () => {
 
   it('stores the resolved module on this.assembler', async () => {
     const wrapper = await mountComponent()
-    expect(wrapper.vm.assembler).toBe(mockAssembler)
+    // Vue 3 wraps reactive data in a Proxy; toRaw() unwraps it so we can
+    // compare the underlying object reference with strict equality.
+    expect(toRaw(wrapper.vm.assembler)).toBe(mockAssembler)
   })
 })
 
@@ -391,6 +394,122 @@ describe('disassemble mode – failed disassembly', () => {
     wrapper.vm.selectedEndianness = 'small'
     await wrapper.find('button.btn-primary').trigger('click')
     expect(wrapper.vm.errorMessage).not.toBe('')
+  })
+})
+
+// ── copy output button ────────────────────────────────────────────────────────
+
+describe('copy output button', () => {
+  it('copy button is hidden when output is empty', async () => {
+    const wrapper = await mountComponent()
+    wrapper.vm.output = ''
+    await wrapper.vm.$nextTick()
+    expect(wrapper.find('button.btn-copy').exists()).toBe(false)
+  })
+
+  it('copy button appears when output is populated', async () => {
+    const wrapper = await mountComponent()
+    wrapper.vm.output = '90 '
+    await wrapper.vm.$nextTick()
+    expect(wrapper.find('button.btn-copy').exists()).toBe(true)
+  })
+
+  it('copyOutput writes the output value to the clipboard', async () => {
+    const wrapper = await mountComponent()
+    wrapper.vm.output = '90 '
+    await wrapper.vm.$nextTick()
+    await wrapper.find('button.btn-copy').trigger('click')
+    expect(navigator.clipboard.writeText).toHaveBeenCalledWith('90 ')
+  })
+
+  it('copy button label changes to "Copied!" after click', async () => {
+    const wrapper = await mountComponent()
+    wrapper.vm.output = '90 '
+    await wrapper.vm.$nextTick()
+    await wrapper.find('button.btn-copy').trigger('click')
+    expect(wrapper.find('button.btn-copy').text()).toBe('Copied!')
+  })
+
+  it('copy button label resets to "Copy" after 2 seconds', async () => {
+    jest.useFakeTimers()
+    const wrapper = await mountComponent()
+    wrapper.vm.output = '90 '
+    await wrapper.vm.$nextTick()
+    await wrapper.find('button.btn-copy').trigger('click')
+    expect(wrapper.vm.copyOutputLabel).toBe('Copied!')
+    jest.advanceTimersByTime(2000)
+    expect(wrapper.vm.copyOutputLabel).toBe('Copy')
+    jest.useRealTimers()
+  })
+
+  it('copy button label is still "Copied!" before the 2-second reset fires', async () => {
+    jest.useFakeTimers()
+    const wrapper = await mountComponent()
+    wrapper.vm.output = '90 '
+    await wrapper.vm.$nextTick()
+    await wrapper.find('button.btn-copy').trigger('click')
+    jest.advanceTimersByTime(1999)
+    expect(wrapper.vm.copyOutputLabel).toBe('Copied!')
+    jest.useRealTimers()
+  })
+})
+
+// ── mode-btn--active class ────────────────────────────────────────────────────
+
+describe('mode toggle active class', () => {
+  it('Assemble button has mode-btn--active class in assemble mode', async () => {
+    const wrapper = await mountComponent()
+    const asmBtn = wrapper.findAll('button.mode-btn').find(b => b.text() === 'Assemble')
+    expect(asmBtn.classes()).toContain('mode-btn--active')
+  })
+
+  it('Disassemble button does not have mode-btn--active in assemble mode', async () => {
+    const wrapper = await mountComponent()
+    const disBtn = wrapper.findAll('button.mode-btn').find(b => b.text() === 'Disassemble')
+    expect(disBtn.classes()).not.toContain('mode-btn--active')
+  })
+
+  it('Disassemble button has mode-btn--active after switching modes', async () => {
+    const wrapper = await mountComponent()
+    const disBtn = wrapper.findAll('button.mode-btn').find(b => b.text() === 'Disassemble')
+    await disBtn.trigger('click')
+    expect(disBtn.classes()).toContain('mode-btn--active')
+  })
+
+  it('Assemble button loses mode-btn--active after switching to disassemble', async () => {
+    const wrapper = await mountComponent()
+    const disBtn = wrapper.findAll('button.mode-btn').find(b => b.text() === 'Disassemble')
+    await disBtn.trigger('click')
+    const asmBtn = wrapper.findAll('button.mode-btn').find(b => b.text() === 'Assemble')
+    expect(asmBtn.classes()).not.toContain('mode-btn--active')
+  })
+})
+
+// ── input / output placeholders ───────────────────────────────────────────────
+
+describe('placeholders', () => {
+  it('input placeholder is assembly syntax in assemble mode', async () => {
+    const wrapper = await mountComponent()
+    expect(wrapper.find('#input').attributes('placeholder')).toBe('mov eax, edx')
+  })
+
+  it('input placeholder is hex bytes in disassemble mode', async () => {
+    const wrapper = await mountComponent()
+    wrapper.vm.mode = 'disassemble'
+    await wrapper.vm.$nextTick()
+    expect(wrapper.find('#input').attributes('placeholder')).toBe('89 d0')
+  })
+
+  it('output placeholder is "assembled bytes appear here" in assemble mode', async () => {
+    const wrapper = await mountComponent()
+    expect(wrapper.find('#output').attributes('placeholder')).toBe('assembled bytes appear here')
+  })
+
+  it('output placeholder is "disassembled instructions appear here" in disassemble mode', async () => {
+    const wrapper = await mountComponent()
+    wrapper.vm.mode = 'disassemble'
+    await wrapper.vm.$nextTick()
+    expect(wrapper.find('#output').attributes('placeholder')).toBe('disassembled instructions appear here')
   })
 })
 

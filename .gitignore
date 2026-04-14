@@ -1,4 +1,5 @@
 .vscode
+.claude
 # Ignore the old root-level vendor copies (replaced by third_party/ submodules)
 /keystone
 /capstone
@@ -6,3 +7,4 @@
 dist/
 # Native test binary
 tests/run_tests
+test-results
