@@ -24,18 +24,18 @@ jobs:
         id: keystone-ref
         run: echo "hash=$(git -C third_party/keystone rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
-      - name: Cache keystone build
+      - name: Cache keystone native build
         id: cache-keystone
         uses: actions/cache@v4
         with:
-          path: third_party/keystone/build
-          key: keystone-${{ runner.os }}-${{ steps.keystone-ref.outputs.hash }}
+          path: third_party/keystone/build-native
+          key: keystone-native-${{ runner.os }}-${{ steps.keystone-ref.outputs.hash }}
 
-      - name: Build keystone
+      - name: Build keystone (native)
         if: steps.cache-keystone.outputs.cache-hit != 'true'
         run: |
-          mkdir -p third_party/keystone/build
-          cd third_party/keystone/build
+          mkdir -p third_party/keystone/build-native
+          cd third_party/keystone/build-native
           cmake .. \
             -DCMAKE_BUILD_TYPE=Release \
             -DBUILD_SHARED_LIBS=OFF \

@@ -114,7 +114,7 @@ The dev server starts at `http://localhost:8080` with hot-reload.
 | Target | Description |
 |---|---|
 | `make build` | Full build: Keystone → WASM → Vue bundle |
-| `make keystone` | Build the Keystone static library only |
+| `make keystone` | Build the Keystone static library for WASM (Emscripten) |
 | `make vue-build` | Vue CLI production build only |
 | `make serve` | Start Vue dev server (port 8080) |
 | `make test` | Compile and run C unit tests |

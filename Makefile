@@ -1,5 +1,6 @@
-KEYSTONE_DIR  := third_party/keystone
-KEYSTONE_LIB  := $(KEYSTONE_DIR)/build/llvm/lib/libkeystone.a
+KEYSTONE_DIR       := third_party/keystone
+KEYSTONE_LIB       := $(KEYSTONE_DIR)/build/llvm/lib/libkeystone.a
+KEYSTONE_NATIVE_LIB := $(KEYSTONE_DIR)/build-native/llvm/lib/libkeystone.a
 ASSETS_DIR    := wasmasm/src/assets
 TMP_JS        := /tmp/wasmasm.js
 TMP_WASM      := /tmp/wasmasm.wasm
@@ -41,14 +42,14 @@ $(ASSETS_DIR)/wasmasm.js $(ASSETS_DIR)/wasmasm.wasm: wasmasm.c $(KEYSTONE_LIB) |
 keystone: $(KEYSTONE_LIB)
 
 $(KEYSTONE_LIB):
-	@echo "Building keystone..."
+	@echo "Building keystone with Emscripten..."
 	mkdir -p $(KEYSTONE_DIR)/build
-	cd $(KEYSTONE_DIR)/build && cmake .. \
+	cd $(KEYSTONE_DIR)/build && emcmake cmake .. \
 		-DCMAKE_BUILD_TYPE=Release \
 		-DBUILD_SHARED_LIBS=OFF \
 		-DLLVM_TARGETS_TO_BUILD="all" \
 		-G "Unix Makefiles"
-	$(MAKE) -C $(KEYSTONE_DIR)/build -j$(shell nproc 2>/dev/null || echo 4)
+	emmake $(MAKE) -C $(KEYSTONE_DIR)/build -j$(shell nproc 2>/dev/null || echo 4)
 
 ## Install Vue/npm dependencies
 npm-install: wasmasm/node_modules
@@ -65,15 +66,26 @@ vue-build: wasmasm/node_modules
 serve: wasmasm/node_modules
 	cd wasmasm && npm run serve
 
+## Native keystone build used only by the test target (g++, not emcc)
+$(KEYSTONE_NATIVE_LIB):
+	@echo "Building keystone natively for tests..."
+	mkdir -p $(KEYSTONE_DIR)/build-native
+	cd $(KEYSTONE_DIR)/build-native && cmake .. \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DBUILD_SHARED_LIBS=OFF \
+		-DLLVM_TARGETS_TO_BUILD="all" \
+		-G "Unix Makefiles"
+	$(MAKE) -C $(KEYSTONE_DIR)/build-native -j$(shell nproc 2>/dev/null || echo 4)
+
 ## Compile and run the native test suite against wasmasm.c
 ## Uses a stub emscripten.h so the code builds without Emscripten installed.
-test: $(KEYSTONE_LIB)
+test: $(KEYSTONE_NATIVE_LIB)
 	g++ -o $(TEST_BIN) \
 		-I $(KEYSTONE_DIR)/include \
 		-I tests \
 		wasmasm.c \
 		tests/test_wasmasm.c \
-		$(KEYSTONE_LIB)
+		$(KEYSTONE_NATIVE_LIB)
 	./$(TEST_BIN)
 
 ## Remove generated assets, Vue dist, and test binary
@@ -83,9 +95,10 @@ clean:
 	rm -f $(TMP_JS) $(TMP_WASM)
 	rm -f $(TEST_BIN)
 
-## Remove everything including the keystone build and node_modules
+## Remove everything including the keystone builds and node_modules
 distclean: clean
 	rm -rf $(KEYSTONE_DIR)/build
+	rm -rf $(KEYSTONE_DIR)/build-native
 	rm -rf wasmasm/node_modules
 
 $(ASSETS_DIR):
