@@ -26,7 +26,7 @@ jobs:
 
       - name: Cache keystone native build
         id: cache-keystone
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: third_party/keystone/build-native
           key: keystone-native-${{ runner.os }}-${{ steps.keystone-ref.outputs.hash }}
@@ -51,7 +51,7 @@ jobs:
 
       - name: Cache capstone native build
         id: cache-capstone
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: third_party/capstone/build-native
           key: capstone-native-${{ runner.os }}-${{ steps.capstone-ref.outputs.hash }}
@@ -118,7 +118,7 @@ jobs:
 
       - name: Cache keystone Emscripten build
         id: cache-keystone
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: third_party/keystone/build
           key: keystone-emscripten-${{ runner.os }}-${{ steps.keystone-ref.outputs.hash }}
@@ -142,7 +142,7 @@ jobs:
 
       - name: Cache capstone Emscripten build
         id: cache-capstone
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: third_party/capstone/build
           key: capstone-emscripten-${{ runner.os }}-${{ steps.capstone-ref.outputs.hash }}
