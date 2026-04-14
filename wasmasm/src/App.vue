@@ -19,7 +19,7 @@
               v-for="loc in supportedLocales"
               :key="loc.code"
               :value="loc.code"
-            >{{ loc.nativeName }}</option>
+            >{{ loc.flag }} {{ loc.nativeName }}</option>
           </select>
         </nav>
       </div>

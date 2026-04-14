@@ -16,16 +16,16 @@ import ur from './locales/ur.json'
  * Add new locales here and drop the matching JSON file in src/locales/.
  */
 export const SUPPORTED_LOCALES = [
-  { code: 'en', nativeName: 'English' },
-  { code: 'zh-CN', nativeName: '简体中文' },
-  { code: 'hi', nativeName: 'हिन्दी' },
-  { code: 'es', nativeName: 'Español' },
-  { code: 'fr', nativeName: 'Français' },
-  { code: 'ar', nativeName: 'العربية' },
-  { code: 'bn', nativeName: 'বাংলা' },
-  { code: 'pt', nativeName: 'Português' },
-  { code: 'ru', nativeName: 'Русский' },
-  { code: 'ur', nativeName: 'اردو' },
+  { code: 'en',    flag: '🇬🇧', nativeName: 'English' },
+  { code: 'zh-CN', flag: '🇨🇳', nativeName: '简体中文' },
+  { code: 'hi',    flag: '🇮🇳', nativeName: 'हिन्दी' },
+  { code: 'es',    flag: '🇪🇸', nativeName: 'Español' },
+  { code: 'fr',    flag: '🇫🇷', nativeName: 'Français' },
+  { code: 'ar',    flag: '🇸🇦', nativeName: 'العربية' },
+  { code: 'bn',    flag: '🇧🇩', nativeName: 'বাংলা' },
+  { code: 'pt',    flag: '🇧🇷', nativeName: 'Português' },
+  { code: 'ru',    flag: '🇷🇺', nativeName: 'Русский' },
+  { code: 'ur',    flag: '🇵🇰', nativeName: 'اردو' },
 ]
 
 const messages = {
