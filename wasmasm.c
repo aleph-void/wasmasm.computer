@@ -157,7 +157,7 @@ int disassemble(char *input, int input_size, char *isa, int endianness, int word
     if (strcmp("arm", isa) == 0) {
         _isa = CS_ARCH_ARM;
     } else if (strcmp("aarch64", isa) == 0) {
-        _isa = CS_ARCH_ARM64;
+        _isa = CS_ARCH_AARCH64;
     } else if (strcmp("x86", isa) == 0) {
         _isa = CS_ARCH_X86;
     } else if (strcmp("ppc", isa) == 0) {
