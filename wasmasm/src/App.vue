@@ -9,6 +9,7 @@
         <nav class="nav-links">
           <a href="https://www.keystone-engine.org/" target="_blank" rel="noopener">{{ $t('nav.links.keystone') }}</a>
           <a href="https://www.capstone-engine.org/" target="_blank" rel="noopener">{{ $t('nav.links.capstone') }}</a>
+          <a href="https://github.com/aleph-void/wasmasm.computer" target="_blank" rel="noopener">GitHub</a>
           <select
             class="locale-select"
             :value="currentLocale"
