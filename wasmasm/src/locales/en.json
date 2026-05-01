@@ -62,6 +62,15 @@
       "disassemblyUnavailable": "Disassembly is not available in this build.",
       "disassemblyFailed": "Disassembly failed. Check your hex bytes, ISA, and settings."
     },
+    "history": {
+      "title": "// History",
+      "empty": "No history yet. Run an assembly or disassembly to see entries here.",
+      "clearAll": "Clear all",
+      "timeJustNow": "just now",
+      "timeMinutesAgo": "{n}m ago",
+      "timeHoursAgo": "{n}h ago",
+      "timeDaysAgo": "{n}d ago"
+    },
     "validation": {
       "x86BigEndian": "x86 is little-endian only",
       "aarch64WordSize": "AArch64 requires 64-bit",
