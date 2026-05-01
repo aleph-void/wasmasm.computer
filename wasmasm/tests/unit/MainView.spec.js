@@ -5,6 +5,8 @@ import MainView from '../../src/components/MainView.vue'
 // mockAssembler is the same object that the component will receive from the
 // mocked factory — we can inspect it and control its return values here.
 import { mockAssembler } from './__mocks__/assemblyModuleMock.js'
+// historyDb functions are replaced by jest.fn()s via moduleNameMapper.
+import { saveEntry, loadAll, deleteEntry, clearAll } from '../../src/historyDb'
 import en from '../../src/locales/en.json'
 import fr from '../../src/locales/fr.json'
 import es from '../../src/locales/es.json'
@@ -80,6 +82,10 @@ beforeEach(() => {
   // Restore default implementations cleared by clearAllMocks()
   mockAssembler._malloc.mockReturnValue(1000)
   mockAssembler.UTF8ToString.mockReturnValue('')
+  loadAll.mockResolvedValue([])
+  saveEntry.mockResolvedValue(1)
+  deleteEntry.mockResolvedValue(undefined)
+  clearAll.mockResolvedValue(undefined)
 })
 
 // ── rendering ─────────────────────────────────────────────────────────────────
@@ -679,5 +685,373 @@ describe('copyClicked', () => {
     await wrapper.find('button.btn-ghost').trigger('click')
     const url = navigator.clipboard.writeText.mock.calls[0][0]
     expect(url).toContain('mode=disassemble')
+  })
+})
+
+// ── history ribbon – rendering ────────────────────────────────────────────────
+
+describe('history ribbon – rendering', () => {
+  it('renders the history ribbon aside element', async () => {
+    const wrapper = await mountComponent()
+    expect(wrapper.find('.history-ribbon').exists()).toBe(true)
+  })
+
+  it('shows the empty-state message when history is empty', async () => {
+    const wrapper = await mountComponent()
+    expect(wrapper.find('.history-empty').exists()).toBe(true)
+  })
+
+  it('hides the empty-state message when history has entries', async () => {
+    loadAll.mockResolvedValue([
+      { id: 1, mode: 'assemble', isa: 'x86', wordSize: '32', endianness: 'small', input: 'nop', output: '90 ', timestamp: Date.now() },
+    ])
+    const wrapper = await mountComponent()
+    await flushPromises()
+    expect(wrapper.find('.history-empty').exists()).toBe(false)
+  })
+
+  it('renders one history cell per loaded entry', async () => {
+    loadAll.mockResolvedValue([
+      { id: 1, mode: 'assemble',    isa: 'x86', wordSize: '32', endianness: 'small', input: 'nop',      output: '90 ',             timestamp: Date.now() },
+      { id: 2, mode: 'disassemble', isa: 'arm', wordSize: '32', endianness: 'big',   input: '05 10 42', output: '0x0:  sub r1\n',  timestamp: Date.now() },
+    ])
+    const wrapper = await mountComponent()
+    await flushPromises()
+    expect(wrapper.findAll('.history-cell').length).toBe(2)
+  })
+
+  it('shows an ASM badge for assemble entries', async () => {
+    loadAll.mockResolvedValue([
+      { id: 1, mode: 'assemble', isa: 'x86', wordSize: '32', endianness: 'small', input: 'nop', output: '90 ', timestamp: Date.now() },
+    ])
+    const wrapper = await mountComponent()
+    await flushPromises()
+    expect(wrapper.find('.history-badge--assemble').text()).toBe('ASM')
+  })
+
+  it('shows a DIS badge for disassemble entries', async () => {
+    loadAll.mockResolvedValue([
+      { id: 1, mode: 'disassemble', isa: 'x86', wordSize: '32', endianness: 'small', input: '90', output: '0x0:  nop\n', timestamp: Date.now() },
+    ])
+    const wrapper = await mountComponent()
+    await flushPromises()
+    expect(wrapper.find('.history-badge--disassemble').text()).toBe('DIS')
+  })
+
+  it('shows clear-all button only when history is non-empty', async () => {
+    const wrapper = await mountComponent()
+    expect(wrapper.find('.history-clear-btn').exists()).toBe(false)
+    loadAll.mockResolvedValue([
+      { id: 1, mode: 'assemble', isa: 'x86', wordSize: '32', endianness: 'small', input: 'nop', output: '90 ', timestamp: Date.now() },
+    ])
+    const wrapper2 = await mountComponent()
+    await flushPromises()
+    expect(wrapper2.find('.history-clear-btn').exists()).toBe(true)
+  })
+})
+
+// ── history ribbon – IndexedDB loading ───────────────────────────────────────
+
+describe('history ribbon – IndexedDB loading', () => {
+  it('calls loadAll once on mount', async () => {
+    await mountComponent()
+    await flushPromises()
+    expect(loadAll).toHaveBeenCalledTimes(1)
+  })
+
+  it('populates this.history from loadAll result', async () => {
+    loadAll.mockResolvedValue([
+      { id: 3, mode: 'assemble', isa: 'mips', wordSize: '32', endianness: 'big', input: 'nop', output: '00 00 00 00 ', timestamp: Date.now() },
+    ])
+    const wrapper = await mountComponent()
+    await flushPromises()
+    expect(wrapper.vm.history.length).toBe(1)
+    expect(wrapper.vm.history[0].id).toBe(3)
+  })
+})
+
+// ── history ribbon – save after run ──────────────────────────────────────────
+
+describe('history ribbon – save after run', () => {
+  it('calls saveEntry with the correct fields after a successful assembly', async () => {
+    mockAssembler.UTF8ToString.mockReturnValue('90 ')
+    const wrapper = await mountComponent()
+    wrapper.vm.input = 'nop'
+    wrapper.vm.selectedISA = 'x86'
+    wrapper.vm.selectedWordSize = '32'
+    wrapper.vm.selectedEndianness = 'small'
+    await wrapper.find('button.btn-primary').trigger('click')
+    await flushPromises()
+    expect(saveEntry).toHaveBeenCalledWith(expect.objectContaining({
+      mode: 'assemble',
+      isa: 'x86',
+      wordSize: '32',
+      endianness: 'small',
+      input: 'nop',
+      output: '90 ',
+    }))
+  })
+
+  it('does not call saveEntry when assembly produces no output', async () => {
+    mockAssembler.UTF8ToString.mockReturnValue('')
+    const wrapper = await mountComponent()
+    wrapper.vm.input = '@@bad@@'
+    wrapper.vm.selectedISA = 'x86'
+    wrapper.vm.selectedWordSize = '32'
+    wrapper.vm.selectedEndianness = 'small'
+    await wrapper.find('button.btn-primary').trigger('click')
+    await flushPromises()
+    expect(saveEntry).not.toHaveBeenCalled()
+  })
+
+  it('calls saveEntry after a successful disassembly', async () => {
+    mockAssembler.UTF8ToString.mockReturnValue('0x0000:  nop\n')
+    const wrapper = await mountComponent()
+    const disBtn = wrapper.findAll('button.mode-btn').find(b => b.text() === 'Disassemble')
+    await disBtn.trigger('click')
+    wrapper.vm.input = '90'
+    wrapper.vm.selectedISA = 'x86'
+    wrapper.vm.selectedWordSize = '32'
+    wrapper.vm.selectedEndianness = 'small'
+    await wrapper.find('button.btn-primary').trigger('click')
+    await flushPromises()
+    expect(saveEntry).toHaveBeenCalledWith(expect.objectContaining({
+      mode: 'disassemble',
+      isa: 'x86',
+      input: '90',
+      output: '0x0000:  nop\n',
+    }))
+  })
+
+  it('does not call saveEntry when disassembly produces no output', async () => {
+    mockAssembler.UTF8ToString.mockReturnValue('')
+    const wrapper = await mountComponent()
+    const disBtn = wrapper.findAll('button.mode-btn').find(b => b.text() === 'Disassemble')
+    await disBtn.trigger('click')
+    wrapper.vm.input = 'zz'
+    wrapper.vm.selectedISA = 'x86'
+    wrapper.vm.selectedWordSize = '32'
+    wrapper.vm.selectedEndianness = 'small'
+    await wrapper.find('button.btn-primary').trigger('click')
+    await flushPromises()
+    expect(saveEntry).not.toHaveBeenCalled()
+  })
+
+  it('prepends the saved entry to the top of the history list', async () => {
+    loadAll.mockResolvedValue([
+      { id: 1, mode: 'assemble', isa: 'arm', wordSize: '32', endianness: 'big', input: 'sub r1, r2, r5', output: '05 10 42 e0 ', timestamp: 1000 },
+    ])
+    saveEntry.mockResolvedValue(2)
+    mockAssembler.UTF8ToString.mockReturnValue('90 ')
+    const wrapper = await mountComponent()
+    await flushPromises()
+    wrapper.vm.input = 'nop'
+    wrapper.vm.selectedISA = 'x86'
+    wrapper.vm.selectedWordSize = '32'
+    wrapper.vm.selectedEndianness = 'small'
+    await wrapper.find('button.btn-primary').trigger('click')
+    await flushPromises()
+    expect(wrapper.vm.history[0].id).toBe(2)
+    expect(wrapper.vm.history[0].isa).toBe('x86')
+    expect(wrapper.vm.history[1].id).toBe(1)
+  })
+
+  it('clears selectedHistoryId after saving a new entry', async () => {
+    loadAll.mockResolvedValue([
+      { id: 1, mode: 'assemble', isa: 'x86', wordSize: '32', endianness: 'small', input: 'nop', output: '90 ', timestamp: 1000 },
+    ])
+    saveEntry.mockResolvedValue(2)
+    mockAssembler.UTF8ToString.mockReturnValue('90 ')
+    const wrapper = await mountComponent()
+    await flushPromises()
+    await wrapper.find('.history-cell').trigger('click')
+    expect(wrapper.vm.selectedHistoryId).toBe(1)
+    await wrapper.find('button.btn-primary').trigger('click')
+    await flushPromises()
+    expect(wrapper.vm.selectedHistoryId).toBeNull()
+  })
+})
+
+// ── history ribbon – load entry ───────────────────────────────────────────────
+
+describe('history ribbon – load entry', () => {
+  it('pre-fills mode, isa, wordSize, endianness, input, and output when a cell is clicked', async () => {
+    const entry = {
+      id: 5, mode: 'disassemble', isa: 'arm', wordSize: '32', endianness: 'big',
+      input: '05 10 42 e0', output: '0x0000:  sub r1, r2, r5\n', timestamp: Date.now(),
+    }
+    loadAll.mockResolvedValue([entry])
+    const wrapper = await mountComponent()
+    await flushPromises()
+    await wrapper.find('.history-cell').trigger('click')
+    expect(wrapper.vm.mode).toBe('disassemble')
+    expect(wrapper.vm.selectedISA).toBe('arm')
+    expect(wrapper.vm.selectedWordSize).toBe('32')
+    expect(wrapper.vm.selectedEndianness).toBe('big')
+    expect(wrapper.vm.input).toBe('05 10 42 e0')
+    expect(wrapper.vm.output).toBe('0x0000:  sub r1, r2, r5\n')
+  })
+
+  it('sets selectedHistoryId to the entry id when a cell is clicked', async () => {
+    loadAll.mockResolvedValue([
+      { id: 7, mode: 'assemble', isa: 'x86', wordSize: '64', endianness: 'small', input: 'nop', output: '90 ', timestamp: Date.now() },
+    ])
+    const wrapper = await mountComponent()
+    await flushPromises()
+    await wrapper.find('.history-cell').trigger('click')
+    expect(wrapper.vm.selectedHistoryId).toBe(7)
+  })
+
+  it('applies history-cell--active class to the selected cell', async () => {
+    loadAll.mockResolvedValue([
+      { id: 7, mode: 'assemble', isa: 'x86', wordSize: '32', endianness: 'small', input: 'nop', output: '90 ', timestamp: Date.now() },
+    ])
+    const wrapper = await mountComponent()
+    await flushPromises()
+    await wrapper.find('.history-cell').trigger('click')
+    expect(wrapper.find('.history-cell').classes()).toContain('history-cell--active')
+  })
+
+  it('resets the validated flag when loading an entry', async () => {
+    loadAll.mockResolvedValue([
+      { id: 1, mode: 'assemble', isa: 'x86', wordSize: '32', endianness: 'small', input: 'nop', output: '90 ', timestamp: Date.now() },
+    ])
+    const wrapper = await mountComponent()
+    await flushPromises()
+    wrapper.vm.validated = true
+    await wrapper.find('.history-cell').trigger('click')
+    expect(wrapper.vm.validated).toBe(false)
+  })
+
+  it('clears the error message when loading an entry', async () => {
+    loadAll.mockResolvedValue([
+      { id: 1, mode: 'assemble', isa: 'x86', wordSize: '32', endianness: 'small', input: 'nop', output: '90 ', timestamp: Date.now() },
+    ])
+    const wrapper = await mountComponent()
+    await flushPromises()
+    wrapper.vm.errorMessage = 'previous error'
+    await wrapper.find('.history-cell').trigger('click')
+    expect(wrapper.vm.errorMessage).toBe('')
+  })
+})
+
+// ── history ribbon – delete entry ─────────────────────────────────────────────
+
+describe('history ribbon – delete entry', () => {
+  it('calls deleteEntry with the entry id when the delete button is clicked', async () => {
+    loadAll.mockResolvedValue([
+      { id: 4, mode: 'assemble', isa: 'x86', wordSize: '32', endianness: 'small', input: 'nop', output: '90 ', timestamp: Date.now() },
+    ])
+    const wrapper = await mountComponent()
+    await flushPromises()
+    await wrapper.find('.history-delete-btn').trigger('click')
+    await flushPromises()
+    expect(deleteEntry).toHaveBeenCalledWith(4)
+  })
+
+  it('removes the deleted entry from this.history', async () => {
+    loadAll.mockResolvedValue([
+      { id: 4, mode: 'assemble', isa: 'x86', wordSize: '32', endianness: 'small', input: 'nop', output: '90 ', timestamp: Date.now() },
+    ])
+    const wrapper = await mountComponent()
+    await flushPromises()
+    await wrapper.find('.history-delete-btn').trigger('click')
+    await flushPromises()
+    expect(wrapper.vm.history.length).toBe(0)
+  })
+
+  it('clears selectedHistoryId when the selected entry is deleted', async () => {
+    loadAll.mockResolvedValue([
+      { id: 4, mode: 'assemble', isa: 'x86', wordSize: '32', endianness: 'small', input: 'nop', output: '90 ', timestamp: Date.now() },
+    ])
+    const wrapper = await mountComponent()
+    await flushPromises()
+    await wrapper.find('.history-cell').trigger('click')
+    expect(wrapper.vm.selectedHistoryId).toBe(4)
+    await wrapper.find('.history-delete-btn').trigger('click')
+    await flushPromises()
+    expect(wrapper.vm.selectedHistoryId).toBeNull()
+  })
+
+  it('only removes the target entry when multiple entries exist', async () => {
+    loadAll.mockResolvedValue([
+      { id: 10, mode: 'assemble',    isa: 'x86',  wordSize: '32', endianness: 'small', input: 'nop', output: '90 ', timestamp: Date.now() },
+      { id: 11, mode: 'disassemble', isa: 'arm',  wordSize: '32', endianness: 'big',   input: '90',  output: '0x0:nop\n', timestamp: Date.now() },
+    ])
+    const wrapper = await mountComponent()
+    await flushPromises()
+    // Click the delete button on the first cell (id 10)
+    await wrapper.findAll('.history-delete-btn')[0].trigger('click')
+    await flushPromises()
+    expect(wrapper.vm.history.length).toBe(1)
+    expect(wrapper.vm.history[0].id).toBe(11)
+  })
+})
+
+// ── history ribbon – clear all ────────────────────────────────────────────────
+
+describe('history ribbon – clear all', () => {
+  it('calls clearAll when the clear-all button is clicked', async () => {
+    loadAll.mockResolvedValue([
+      { id: 1, mode: 'assemble', isa: 'x86', wordSize: '32', endianness: 'small', input: 'nop', output: '90 ', timestamp: Date.now() },
+    ])
+    const wrapper = await mountComponent()
+    await flushPromises()
+    await wrapper.find('.history-clear-btn').trigger('click')
+    await flushPromises()
+    expect(clearAll).toHaveBeenCalledTimes(1)
+  })
+
+  it('empties this.history after clear all', async () => {
+    loadAll.mockResolvedValue([
+      { id: 1, mode: 'assemble', isa: 'x86', wordSize: '32', endianness: 'small', input: 'nop', output: '90 ', timestamp: Date.now() },
+      { id: 2, mode: 'assemble', isa: 'arm', wordSize: '32', endianness: 'big',   input: 'nop', output: '00 f0 20 e3 ', timestamp: Date.now() },
+    ])
+    const wrapper = await mountComponent()
+    await flushPromises()
+    await wrapper.find('.history-clear-btn').trigger('click')
+    await flushPromises()
+    expect(wrapper.vm.history.length).toBe(0)
+  })
+
+  it('clears selectedHistoryId after clear all', async () => {
+    loadAll.mockResolvedValue([
+      { id: 1, mode: 'assemble', isa: 'x86', wordSize: '32', endianness: 'small', input: 'nop', output: '90 ', timestamp: Date.now() },
+    ])
+    const wrapper = await mountComponent()
+    await flushPromises()
+    await wrapper.find('.history-cell').trigger('click')
+    expect(wrapper.vm.selectedHistoryId).toBe(1)
+    await wrapper.find('.history-clear-btn').trigger('click')
+    await flushPromises()
+    expect(wrapper.vm.selectedHistoryId).toBeNull()
+  })
+})
+
+// ── history ribbon – formatTime ───────────────────────────────────────────────
+
+describe('history ribbon – formatTime', () => {
+  it('returns "just now" for timestamps less than 60 seconds ago', async () => {
+    const wrapper = await mountComponent()
+    const result = wrapper.vm.formatTime(Date.now() - 30_000)
+    expect(result).toBe('just now')
+  })
+
+  it('returns minutes label for timestamps 1–59 minutes ago', async () => {
+    const wrapper = await mountComponent()
+    const result = wrapper.vm.formatTime(Date.now() - 5 * 60_000)
+    expect(result).toBe('5m ago')
+  })
+
+  it('returns hours label for timestamps 1–23 hours ago', async () => {
+    const wrapper = await mountComponent()
+    const result = wrapper.vm.formatTime(Date.now() - 3 * 3_600_000)
+    expect(result).toBe('3h ago')
+  })
+
+  it('returns days label for timestamps 1+ days ago', async () => {
+    const wrapper = await mountComponent()
+    const result = wrapper.vm.formatTime(Date.now() - 2 * 86_400_000)
+    expect(result).toBe('2d ago')
   })
 })

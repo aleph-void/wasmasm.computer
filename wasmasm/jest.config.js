@@ -27,6 +27,10 @@ module.exports = {
     // resolves when it imports the mock directly — this ensures a single
     // module-registry entry and stable reference equality in tests.
     '(^|/)assets/wasmasm\\.js$': path.resolve(__dirname, 'tests/unit/__mocks__/assemblyModuleMock.js'),
+    // Redirect the IndexedDB history module so unit tests never touch a real
+    // database and can control return values via the exported jest.fn()s.
+    // Match both `../historyDb` (no extension) and `../historyDb.js`.
+    '(^|/)historyDb(\\.js)?$': path.resolve(__dirname, 'tests/unit/__mocks__/historyDbMock.js'),
     // Silence CSS imports that come through shared imports (e.g. Bootstrap)
     '\\.(css|scss|sass)$': '<rootDir>/tests/unit/__mocks__/styleMock.js',
   },
