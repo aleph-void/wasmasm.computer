@@ -1,5 +1,7 @@
 # WASMASM
 
+[![Sponsor Aleph Void](https://img.shields.io/badge/Sponsor-Aleph%20Void-EA4AAA?logo=githubsponsors&logoColor=white)](https://github.com/sponsors/aleph-void)
+
 A browser-based CPU assembler powered by the [Keystone Engine](https://www.keystone-engine.org/) compiled to WebAssembly. Paste assembly instructions, choose your target architecture, and get the assembled bytes back — no server required.
 
 **Live site:** [wasmasm.computer](https://wasmasm.computer)
