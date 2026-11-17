@@ -28,15 +28,14 @@ function makeI18nWithLocale(locale) {
 // ── helpers ───────────────────────────────────────────────────────────────────
 
 /**
- * Replace window.location with a plain object before mounting so that the
- * mounted() hook's URLSearchParams call is controlled by the test.
+ * Set the jsdom URL's query string before mounting so that the mounted()
+ * hook's URLSearchParams call is controlled by the test. jsdom 26 (used by
+ * jest-environment-jsdom 30) makes window.location non-configurable, so we
+ * navigate with history.replaceState instead of redefining the property.
+ * The origin stays at jsdom's default, http://localhost.
  */
-function setLocation(search = '', origin = 'http://localhost') {
-  Object.defineProperty(window, 'location', {
-    value: { search, origin },
-    writable: true,
-    configurable: true,
-  })
+function setLocation(search = '') {
+  window.history.replaceState(null, '', '/' + search)
 }
 
 /**
