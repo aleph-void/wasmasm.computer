@@ -25,7 +25,12 @@ jobs:
           submodules: recursive
 
       - name: Install build dependencies
-        run: sudo apt-get update && sudo apt-get install -y cmake build-essential
+        run: |
+          sudo apt-get update && sudo apt-get install -y cmake build-essential
+          # The keystone submodule's CMakeLists sets pre-3.5 policies, which
+          # CMake 4 (now on the runner image) rejects. Pin CMake 3.x.
+          pipx install cmake==3.31.6
+          echo "${PIPX_BIN_DIR:-$HOME/.local/bin}" >> "$GITHUB_PATH"
 
       # ── Emscripten (must come before keystone/capstone builds) ───────────────
 
