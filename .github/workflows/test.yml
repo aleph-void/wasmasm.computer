@@ -121,6 +121,10 @@ jobs:
 
       - name: Set up Emscripten
         uses: mymindstorm/setup-emsdk@v16
+        with:
+          # Pinned: newer emsdk ("latest" resolved to 7.0.0) no longer links the
+          # C++ runtime when linking with emcc, so libkeystone.a fails to link.
+          version: 3.1.62
 
       - name: Get keystone submodule commit hash
         id: keystone-ref
