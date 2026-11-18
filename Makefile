@@ -118,12 +118,10 @@ $(CAPSTONE_NATIVE_LIB):
 	$(MAKE) -C $(CAPSTONE_DIR)/build-native -j$(shell nproc 2>/dev/null || echo 4)
 
 ## Compile and run the native test suite against wasmasm.c
-## Uses a stub emscripten.h so the code builds without Emscripten installed.
 test: $(KEYSTONE_NATIVE_LIB) $(CAPSTONE_NATIVE_LIB)
 	g++ -o $(TEST_BIN) \
 		-I $(KEYSTONE_DIR)/include \
 		-I $(CAPSTONE_DIR)/include \
-		-I tests \
 		wasmasm.c \
 		tests/test_wasmasm.c \
 		$(KEYSTONE_NATIVE_LIB) \

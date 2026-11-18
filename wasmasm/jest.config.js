@@ -5,10 +5,17 @@ module.exports = {
   testMatch: ['<rootDir>/tests/unit/**/*.spec.js'],
 
   transform: {
-    // Vue SFC → JS (requires @vue/vue3-jest for Vue 3 + Jest 27)
+    // Vue SFC → JS (requires @vue/vue3-jest for Vue 3 + Jest 29)
     '^.+\\.vue$': '@vue/vue3-jest',
     // JS/JSX → CommonJS via the project's babel.config.js
     '^.+\\.js$': 'babel-jest',
+  },
+
+  // jsdom normally activates browser export conditions, causing vue/intlify
+  // packages to resolve to their ESM browser bundles which Jest can't parse.
+  // Override to Node-compatible conditions so CJS builds are selected instead.
+  testEnvironmentOptions: {
+    customExportConditions: ['node', 'require', 'default'],
   },
 
   moduleNameMapper: {
@@ -20,6 +27,10 @@ module.exports = {
     // resolves when it imports the mock directly — this ensures a single
     // module-registry entry and stable reference equality in tests.
     '(^|/)assets/wasmasm\\.js$': path.resolve(__dirname, 'tests/unit/__mocks__/assemblyModuleMock.js'),
+    // Redirect the IndexedDB history module so unit tests never touch a real
+    // database and can control return values via the exported jest.fn()s.
+    // Match both `../historyDb` (no extension) and `../historyDb.js`.
+    '(^|/)historyDb(\\.js)?$': path.resolve(__dirname, 'tests/unit/__mocks__/historyDbMock.js'),
     // Silence CSS imports that come through shared imports (e.g. Bootstrap)
     '\\.(css|scss|sass)$': '<rootDir>/tests/unit/__mocks__/styleMock.js',
   },

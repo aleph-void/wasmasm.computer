@@ -84,7 +84,7 @@ test.describe('page structure', () => {
 
   test('renders the ISA select with all supported architectures', async ({ page }) => {
     const options = await page.locator('#selectedISA option:not([disabled])').allTextContents()
-    expect(options).toEqual(expect.arrayContaining(['x86', 'ARM', 'AArch64', 'MIPS', 'PPC', 'SPARC']))
+    expect(options).toEqual(expect.arrayContaining(['x86', 'ARM', 'AArch64', 'MIPS', 'PPC', 'SPARC', 'RISC-V', 'SystemZ']))
   })
 
   test('renders word-size options 16, 32 and 64-bit', async ({ page }) => {
@@ -521,16 +521,16 @@ test.describe('i18n / language selector', () => {
   test('language selector contains all 10 supported locales', async ({ page }) => {
     const texts = await page.locator('select.locale-select option').allTextContents()
     expect(texts).toEqual(expect.arrayContaining([
-      'English',
-      '简体中文',
-      'हिन्दी',
-      'Español',
-      'Français',
-      'العربية',
-      'বাংলা',
-      'Português',
-      'Русский',
-      'اردو',
+      '🇬🇧 English',
+      '🇨🇳 简体中文',
+      '🇮🇳 हिन्दी',
+      '🇪🇸 Español',
+      '🇫🇷 Français',
+      '🇸🇦 العربية',
+      '🇧🇩 বাংলা',
+      '🇧🇷 Português',
+      '🇷🇺 Русский',
+      '🇵🇰 اردو',
     ]))
     expect(texts).toHaveLength(10)
   })
