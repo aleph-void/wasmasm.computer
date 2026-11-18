@@ -14,23 +14,33 @@ on:
 
 jobs:
   build-and-deploy:
-    runs-on: ubuntu-latest
+    # Playwright cannot install browsers on ubuntu-latest (26.04) yet.
+    runs-on: ubuntu-24.04
     permissions:
       contents: write  # peaceiris/actions-gh-pages needs write access to push gh-pages branch
 
     steps:
       - name: Checkout repository (with submodules)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           submodules: recursive
 
       - name: Install build dependencies
-        run: sudo apt-get update && sudo apt-get install -y cmake build-essential
+        run: |
+          sudo apt-get update && sudo apt-get install -y cmake build-essential
+          # The keystone submodule's CMakeLists sets pre-3.5 policies, which
+          # CMake 4 (now on the runner image) rejects. Pin CMake 3.x.
+          pipx install cmake==3.31.6
+          echo "${PIPX_BIN_DIR:-$HOME/.local/bin}" >> "$GITHUB_PATH"
 
       # ── Emscripten (must come before keystone/capstone builds) ───────────────
 
       - name: Set up Emscripten
         uses: mymindstorm/setup-emsdk@v16
+        with:
+          # Pinned: newer emsdk ("latest" resolved to 7.0.0) no longer links the
+          # C++ runtime when linking with emcc, so libkeystone.a fails to link.
+          version: 3.1.62
 
       # ── Keystone ─────────────────────────────────────────────────────────────
 
@@ -40,7 +50,7 @@ jobs:
 
       - name: Cache keystone Emscripten build
         id: cache-keystone
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: third_party/keystone/build
           key: keystone-emscripten-${{ runner.os }}-${{ steps.keystone-ref.outputs.hash }}
@@ -66,7 +76,7 @@ jobs:
 
       - name: Cache capstone Emscripten build
         id: cache-capstone
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: third_party/capstone/build
           key: capstone-emscripten-${{ runner.os }}-${{ steps.capstone-ref.outputs.hash }}
@@ -127,7 +137,7 @@ jobs:
       # ── Deploy ───────────────────────────────────────────────────────────────
 
       - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
+        uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./wasmasm/dist
