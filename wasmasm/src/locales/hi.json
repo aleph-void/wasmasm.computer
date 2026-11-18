@@ -3,13 +3,14 @@
     "subtitle": "WebAssembly असेंबलर",
     "links": {
       "keystone": "Keystone",
-      "blog": "StarkeBlog"
+      "capstone": "Capstone"
     }
   },
   "footer": {
-    "text": "{keystone} को WebAssembly में संकलित करके बनाया गया, {alephvoid} द्वारा निर्मित",
+    "text": "{keystone} और {capstone} को WebAssembly में संकलित करके बनाया गया, {alephvoid} द्वारा निर्मित",
     "keystoneName": "Keystone Engine",
-    "alephvoidName": "Aleph Void LLC"
+    "alephvoidName": "Aleph Void LLC",
+    "capstoneName": "Capstone Engine"
   },
   "assembler": {
     "sectionLabel": "// असेंबलर",
@@ -60,6 +61,14 @@
       "assemblyFailed": "असेंबली विफल रही। अपना इनपुट और सेटिंग्स जाँचकर फिर प्रयास करें।",
       "disassemblyUnavailable": "इस बिल्ड में डिसअसेंबली उपलब्ध नहीं है।",
       "disassemblyFailed": "डिसअसेंबली विफल रही। अपने हेक्स बाइट्स, ISA और सेटिंग्स जाँचें।"
+    },
+    "validation": {
+      "x86BigEndian": "x86 केवल लिटिल-एंडियन का समर्थन करता है",
+      "aarch64WordSize": "AArch64 के लिए 64-बिट आवश्यक है",
+      "armWordSize": "64-बिट ARM के लिए AArch64 का उपयोग करें",
+      "mips16bit": "MIPS के लिए 32-बिट या 64-बिट आवश्यक है",
+      "riscv16bit": "RISC-V के लिए 32-बिट या 64-बिट आवश्यक है",
+      "systemzLittleEndian": "SystemZ केवल बिग-एंडियन का समर्थन करता है"
     }
   },
   "language": {

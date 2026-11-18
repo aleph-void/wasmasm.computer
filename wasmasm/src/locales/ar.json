@@ -3,13 +3,14 @@
     "subtitle": "مجمّع WebAssembly",
     "links": {
       "keystone": "Keystone",
-      "blog": "StarkeBlog"
+      "capstone": "Capstone"
     }
   },
   "footer": {
-    "text": "مبني باستخدام {keystone} بعد تجميعه إلى WebAssembly، ومن إنشاء {alephvoid}",
+    "text": "مبني باستخدام {keystone} و{capstone} بعد تجميلهما إلى WebAssembly، ومن إنشاء {alephvoid}",
     "keystoneName": "Keystone Engine",
-    "alephvoidName": "Aleph Void LLC"
+    "alephvoidName": "Aleph Void LLC",
+    "capstoneName": "Capstone Engine"
   },
   "assembler": {
     "sectionLabel": "// المجمّع",
@@ -60,6 +61,14 @@
       "assemblyFailed": "فشل التجميع. تحقق من الإدخال والإعدادات ثم حاول مرة أخرى.",
       "disassemblyUnavailable": "التفكيك غير متاح في هذه النسخة.",
       "disassemblyFailed": "فشل التفكيك. تحقق من البايتات السداسية وISA والإعدادات."
+    },
+    "validation": {
+      "x86BigEndian": "يدعم x86 وضع الطرفية الصغرى فقط",
+      "aarch64WordSize": "يتطلب AArch64 وضع 64 بت",
+      "armWordSize": "استخدم AArch64 لمعمارية ARM ‏64 بت",
+      "mips16bit": "يتطلب MIPS وضع 32 بت أو 64 بت",
+      "riscv16bit": "يتطلب RISC-V وضع 32 بت أو 64 بت",
+      "systemzLittleEndian": "يدعم SystemZ وضع الطرفية الكبرى فقط"
     }
   },
   "language": {

@@ -3,13 +3,14 @@
     "subtitle": "WebAssembly 汇编器",
     "links": {
       "keystone": "Keystone",
-      "blog": "StarkeBlog"
+      "capstone": "Capstone"
     }
   },
   "footer": {
-    "text": "基于编译为 WebAssembly 的 {keystone} 构建，由 {alephvoid} 创建",
+    "text": "基于编译为 WebAssembly 的 {keystone} 和 {capstone} 构建，由 {alephvoid} 创建",
     "keystoneName": "Keystone Engine",
-    "alephvoidName": "Aleph Void LLC"
+    "alephvoidName": "Aleph Void LLC",
+    "capstoneName": "Capstone Engine"
   },
   "assembler": {
     "sectionLabel": "// 汇编器",
@@ -60,6 +61,14 @@
       "assemblyFailed": "汇编失败。请检查输入和设置后重试。",
       "disassemblyUnavailable": "此构建版本不提供反汇编功能。",
       "disassemblyFailed": "反汇编失败。请检查十六进制字节、ISA 和相关设置。"
+    },
+    "validation": {
+      "x86BigEndian": "x86 仅支持小端序",
+      "aarch64WordSize": "AArch64 需要 64 位",
+      "armWordSize": "64 位 ARM 请使用 AArch64",
+      "mips16bit": "MIPS 需要 32 位或 64 位",
+      "riscv16bit": "RISC-V 需要 32 位或 64 位",
+      "systemzLittleEndian": "SystemZ 仅支持大端序"
     }
   },
   "language": {
