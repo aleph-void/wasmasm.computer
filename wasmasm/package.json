@@ -30,7 +30,7 @@
     "globals": "^17.14.0",
     "jest": "^30.4.2",
     "jest-environment-jsdom": "^30.4.1",
-    "serve": "^14.2.3",
+    "serve": "^14.2.8",
     "vue-eslint-parser": "^10.4.2"
   },
   "browserslist": [
